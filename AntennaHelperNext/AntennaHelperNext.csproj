@@ -13,6 +13,7 @@
         <AssemblyName>AntennaHelperNext</AssemblyName>
         <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
         <FileAlignment>512</FileAlignment>
+        <FileVersion>1.0.0.0</FileVersion>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
         <PlatformTarget>AnyCPU</PlatformTarget>
@@ -35,18 +36,14 @@
     </PropertyGroup>
     <ItemGroup>
         <Compile Include="AHEditor.cs" />
+        <Compile Include="AHEditorWindows.cs" />
+        <Compile Include="AHSettings.cs" />
+        <Compile Include="AHUIStyling.cs" />
+        <Compile Include="AHWindow.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
     </ItemGroup>
     <ItemGroup>
       <None Include="packages.config" />
-    </ItemGroup>
-    <ItemGroup>
-      <Reference Include="ClickThroughBlocker">
-        <HintPath>..\..\Mods\000_ClickThroughBlocker\Plugins\ClickThroughBlocker.dll</HintPath>
-      </Reference>
-      <Reference Include="ToolbarControl">
-        <HintPath>..\..\Mods\001_ToolbarControl\Plugins\ToolbarControl.dll</HintPath>
-      </Reference>
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
     <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
@@ -67,5 +64,33 @@
     <Target Name="AfterBuild">
     </Target>
     -->
-
+    <ItemGroup>
+        <KSPVersionFile Include=".">
+            <Destination>$(RepoRootPath)../GameData/AntennaHelperNext/AntennaHelperNext.version</Destination>
+            <URL>https://github.com/Richi0D/AHNext/releases/latest/download/mymod.version</URL>
+            <Download>https://github.com/Richi0D.AHNext/releases/latest</Download>
+            <KSP_Version_Min>1.12</KSP_Version_Min>
+        </KSPVersionFile>
+    </ItemGroup>
+    <ItemGroup>
+      <Reference Include="ClickThroughBlocker">
+        <HintPath>..\..\..\Mods\000_ClickThroughBlocker\Plugins\ClickThroughBlocker.dll</HintPath>
+          <Private>False</Private>
+          <KSPAssemblyName>ClickThroughBlocker</KSPAssemblyName>
+      </Reference>
+      <Reference Include="ToolbarControl">
+        <HintPath>..\..\..\Mods\001_ToolbarControl\Plugins\ToolbarControl.dll</HintPath>
+          <Private>False</Private>
+          <KSPAssemblyName>ToolbarControl</KSPAssemblyName>
+      </Reference>
+    </ItemGroup>
+    <PropertyGroup>
+        <!-- Generate assembly attributes -->
+        <GenerateKSPAssemblyAttribute>true</GenerateKSPAssemblyAttribute>
+        <GenerateKSPAssemblyDependencyAttributes>true</GenerateKSPAssemblyDependencyAttributes>
+    </PropertyGroup>
+    <PropertyGroup>
+        <!-- Prevent copying any referenced DLLs from ReferencePath -->
+        <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    </PropertyGroup>
 </Project>
