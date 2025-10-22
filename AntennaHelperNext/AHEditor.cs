@@ -13,6 +13,16 @@ namespace AntennaHelperNext
 	    
 	    private static AntennaHelperEditor instance;
 	    
+	    // Editor variables for GUI
+	    public static float trackingStationLevel;
+	    // Target variables
+	    public static double targetPower = 0;
+	    public static string targetName = "";
+	    // Vessel variables
+	    public static bool selectAntennaIsDirect = true;
+	    public static ShipAntennas EditorShipAntennas = new ShipAntennas();
+	    
+	    
         // Start is called before the first frame update
         public void Start()
         {
@@ -22,38 +32,42 @@ namespace AntennaHelperNext
                 return;
             }
             
+            // init editor variables for GUI
+            trackingStationLevel = ScenarioUpgradeableFacilities.GetFacilityLevel (SpaceCenterFacility.TrackingStation);
+            targetPower = GameVariables.Instance.GetDSNRange (trackingStationLevel);
+            targetName = Localizer.Format ("#autoLOC_AH_0015") + " " + (int)(trackingStationLevel * 2 + 1);
+            
+            // Toolbar
             GameEvents.onGUIApplicationLauncherReady.Add (AddToolbarButton);
             GameEvents.onGUIApplicationLauncherDestroyed.Add (RemoveToolbarButton);
+            
+            // fetch Antennas
+            EditorShipAntennas.FetchAntennas(EditorLogic.fetch.ship.Parts);
 
-            // GameEvents.onEditorLoad.Add (VesselLoad);
-            // GameEvents.onEditorPartEvent.Add (PartEvent);
-            // GameEvents.onEditorPodPicked.Add (PodPicked);
-            // GameEvents.onEditorPodDeleted.Add (PodDeleted);
+            GameEvents.onEditorLoad.Add (VesselLoad);
+            GameEvents.onEditorPartEvent.Add (PartEvent);
+            GameEvents.onEditorPodPicked.Add (PodPicked);
+            GameEvents.onEditorPodDeleted.Add (PodDeleted);
 
-            // GameEvents.onGameSceneSwitchRequested.Add (QuitEditor);
         }
         
-        // onDestroy is called when the script instance is being destroyed
+        // onDestroy is called when the instance is being destroyed
         public void OnDestroy ()
         {
+	        // Toolbar
             GameEvents.onGUIApplicationLauncherReady.Remove (AddToolbarButton);
             GameEvents.onGUIApplicationLauncherDestroyed.Remove (RemoveToolbarButton);
             RemoveToolbarButton();
 
-            // GameEvents.onEditorLoad.Remove (VesselLoad);
-            // GameEvents.onEditorPartEvent.Remove (PartEvent);
-            // GameEvents.onEditorPodPicked.Remove (PodPicked);
-            // GameEvents.onEditorPodDeleted.Remove (PodDeleted);
-
-            // GameEvents.onGameSceneSwitchRequested.Remove (QuitEditor);
+            GameEvents.onEditorLoad.Remove (VesselLoad);
+            GameEvents.onEditorPartEvent.Remove (PartEvent);
+            GameEvents.onEditorPodPicked.Remove (PodPicked);
+            GameEvents.onEditorPodDeleted.Remove (PodDeleted);
+            
+            // save positions and at last destroy the instance
+			AntennaHelperSettings.Save();
+            Destroy(this);
         }
-        
-        // VesselLoad is called when a ship is loaded
-        public void VesselLoad (ShipConstruct ship, KSP.UI.Screens.CraftBrowserDialog.LoadType screenType)
-        {
-            //CreateAntennaList ();
-            //DoTheMath ();
-        }        
         
         // Update is called once per frame
         public void Update ()
@@ -74,6 +88,25 @@ namespace AntennaHelperNext
             }
         }
         
+        // VesselLoad is called when a ship is loaded
+        public void VesselLoad (ShipConstruct ship, KSP.UI.Screens.CraftBrowserDialog.LoadType screenType)
+        {
+	        EditorShipAntennas.FetchAntennas(ship.Parts);
+	        //DoTheMath ();
+        }
+        
+        public void PodDeleted ()
+        {
+	        EditorShipAntennas.FetchAntennas(EditorLogic.fetch.ship.Parts);
+	        //DoTheMath ();
+        }
+
+        public void PodPicked (Part part = null)
+        {
+	        EditorShipAntennas.FetchAntennas(EditorLogic.fetch.ship.Parts);
+	        //DoTheMath ();
+        }
+        
         
         #region GUI
         // window positions
@@ -82,7 +115,7 @@ namespace AntennaHelperNext
         {
 	        { "EditorMain", new WindowInfo(
 		        835298,
-		        new Rect(AntennaHelperSettings.WindowPositions["editor_main_window_position"], new Vector2(400, 200)),
+		        new Rect(AntennaHelperSettings.WindowPositions["editor_main_window_position"], new Vector2(390, 500)),
 		        AHEditorWindows.MainWindow,
 		        Localizer.Format ("#autoLOC_AH_0001"),
 		        saveKey:"editor_main_window_position")

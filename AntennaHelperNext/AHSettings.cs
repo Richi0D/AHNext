@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.IO;
+using System.Reflection;
 using System.Collections.Generic;
 using UnityEngine;
 using ToolbarControl_NS;
@@ -21,13 +22,28 @@ namespace AntennaHelperNext
 	{
 		public static string ApplicationRootPath;
 		public static Texture signalPerDistanceTex;
+		public static float uiScale;
+		public static Texture2D separatorTex;
 
 		void Start()
 		{
 			ApplicationRootPath = KSPUtil.ApplicationRootPath;
 			// Load textures
-			signalPerDistanceTex = (Texture)GameDatabase.Instance.GetTexture ("AntennaHelper/Textures/signal_per_distance", false);
-
+			signalPerDistanceTex = (Texture)GameDatabase.Instance.GetTexture ("AntennaHelperNext/Textures/signal_per_distance", false);
+			// scaling parameter
+			uiScale = GameSettings.UI_SCALE;
+			// create texture for gui seperator
+			InitSeparatorTex();
+			
+		}
+		
+		public static void InitSeparatorTex()
+		{
+			// Create a simple colored texture (1x1 pixel)
+			Color separatorColor = new Color(48f/255, 63f/255, 73f/255);
+			separatorTex = new Texture2D(1,1);
+			separatorTex.SetPixel(0,0, separatorColor);
+			separatorTex.Apply();
 		}
 	}
 	
@@ -93,7 +109,7 @@ namespace AntennaHelperNext
 		private static ConfigNode nodePosWindows;
 
 		// Path to settings.cfg
-		public static string location_settings = "GameData/AntennaHelper/PluginData/Settings.cfg";
+		public static string location_settings = "GameData/AntennaHelperNext/Settings.cfg";
 		
 		// default window positions
 		private static readonly Dictionary<string, Vector2> defaultPositions = new Dictionary<string, Vector2>()
@@ -121,7 +137,7 @@ namespace AntennaHelperNext
 
 		public static void Load()
 		{
-			string path = StartVariables.ApplicationRootPath + location_settings;
+			string path = Path.Combine(StartVariables.ApplicationRootPath, location_settings);
 			settingsNode = ConfigNode.Load(path);
 			if (settingsNode == null)
 				settingsNode = new ConfigNode();

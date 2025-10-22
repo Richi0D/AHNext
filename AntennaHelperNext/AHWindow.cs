@@ -21,7 +21,7 @@ namespace AntennaHelperNext
             string title,
             string childWindow = null,
             string saveKey = null,
-            float minHeight = 0
+            float minHeight = 40
             )
         {
             ID = id;
@@ -34,9 +34,4 @@ namespace AntennaHelperNext
             IsVisible = false;
         }
     }
-    
-    
-    
-    
-    
 }

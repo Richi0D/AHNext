@@ -5,12 +5,10 @@ using KSP.Localization;
 
 namespace AntennaHelperNext
 {
-public class AHEditorWindows
+	
+	public class AHEditorWindows
 	{
-		private static string antennaTypeStr = Localizer.Format ("#autoLOC_AH_0002");
-		private static bool antennaTypeIsDirect = true;
-
-
+		
 		// Close button for all windows
 		private static void DrawCloseButton(string windowName)
 		{
@@ -23,26 +21,70 @@ public class AHEditorWindows
 			}
 		}
 		
+		// Get Text for direct or relay antenna
+		private static string GetAntennaTypeText(bool isDirect)
+		{
+			if (isDirect)
+			{
+				return Localizer.Format("#autoLOC_AH_0002");
+			}
+			else
+			{
+				return Localizer.Format("#autoLOC_AH_0003");
+			}
+		}
+		
+		// simplify Antenna Values and ranges
+		public static string ToKMG(double value, bool useMetricSuffix = false, int decimalPlaces = 0)
+		{
+			string[] suffixes = useMetricSuffix ? new string[] { "km", "Mm", "Gm" } : new string[] { "k", "M", "G" };
+
+			double absValue = Math.Abs(value);
+
+			if (absValue >= 1_000_000_000f)
+				return (value / 1_000_000_000f).ToString($"F{decimalPlaces}") + suffixes[2]; // G / Gm
+			else if (absValue >= 1_000_000f)
+				return (value / 1_000_000f).ToString($"F{decimalPlaces}") + suffixes[1];     // M / Mm
+			else if (absValue >= 1_000f)
+				return (value / 1_000f).ToString($"F{decimalPlaces}") + suffixes[0];         // k / km
+			else
+				return value.ToString($"F{decimalPlaces}");                                   // no suffix
+		}
+		
+		
 		public static void MainWindow (int id)
 		{
+			float widthFirstCol = AntennaHelperEditor.EditorWindows["EditorMain"].Position.width * .4f;
+			
 			// Close Button
-			DrawCloseButton("MainWindow");
+			DrawCloseButton("EditorMain");
+			
 			// Start UI
 			GUILayout.BeginVertical ();
+			AHUIStyling.DrawSeparator();
+			GUILayout.Space (5f);
 			
 			// Target Selection
 			GUILayout.Label(/*Target*/Localizer.Format ("#autoLOC_AH_0100"), AHUIStyling.HeaderLabel);
-			if (GUILayout.Button (/*Pick A Target*/Localizer.Format ("#autoLOC_AH_0007"))) {
-				/*if (AHEditor.showTargetWindow) {
-					AHEditor.CloseTargetWindow ();
+			if (GUILayout.Button (/*Pick A Target*/Localizer.Format ("#autoLOC_AH_0007"), AHUIStyling.ButtonDefault)) {
+				if (AntennaHelperEditor.EditorWindows["EditorTarget"].IsVisible) {
+					AntennaHelperEditor.CloseWindow("EditorTarget");
 				} else {
-					AHEditor.showTargetWindow = true;
-				}*/
+					// be sure other windows are closed again
+					AntennaHelperEditor.CloseWindow("EditorTargetShipFlight");
+					AntennaHelperEditor.CloseWindow("EditorTargetShipEditor");
+					AntennaHelperEditor.CloseWindow("EditorTargetPart");
+					AntennaHelperEditor.ShowWindow("EditorTarget");
+				}
 			}
-			GUILayout.Label( /*Current target*/Localizer.Format("#autoLOC_AH_0006"));
-				                  /*+ " : " + AHEditor.targetName
-				                  + "  (" + AHEditor.targetPower.ToString ("N0") + ")");*/
-			GUILayout.Label( /*Target Power*/Localizer.Format("#autoLOC_AH_0101"));
+			GUILayout.BeginHorizontal ();
+			GUILayout.Label( /*Current target*/Localizer.Format("#autoLOC_AH_0006") + " : ", AHUIStyling.DefaultLabel, GUILayout.Width(widthFirstCol));
+			GUILayout.Label(AntennaHelperEditor.targetName, AHUIStyling.DefaultLabel);
+			GUILayout.EndHorizontal();
+			GUILayout.BeginHorizontal ();
+			GUILayout.Label( /*Target Power*/Localizer.Format("#autoLOC_AH_0101") + " : ", AHUIStyling.DefaultLabel,GUILayout.Width(widthFirstCol));
+			GUILayout.Label(  ToKMG(AntennaHelperEditor.targetPower), AHUIStyling.DefaultLabel);
+			GUILayout.EndHorizontal();
 			AHUIStyling.DrawSeparator();
 			
 			// Current Vessel
@@ -51,36 +93,35 @@ public class AHEditorWindows
 			GUILayout.BeginHorizontal ();
 			if (GUILayout.Button (
 				/*Direct*/Localizer.Format ("#autoLOC_AH_0002") 
-				+ " (" + /*All Antennas*/Localizer.Format ("#autoLOC_AH_0005") + ")"))
+				+ " (" + /*All Antennas*/Localizer.Format ("#autoLOC_AH_0005") + ")", AHUIStyling.ButtonDefault))
 			{
-				antennaTypeStr = /*Direct*/Localizer.Format ("#autoLOC_AH_0002");
-				antennaTypeIsDirect = true;
+				AntennaHelperEditor.selectAntennaIsDirect = true;
+				// TODO: calculate new values
 			}
-			if (GUILayout.Button (/*Relay*/Localizer.Format ("#autoLOC_AH_0003"))) {
-				antennaTypeStr = /*Relay*/Localizer.Format ("#autoLOC_AH_0003");
-				antennaTypeIsDirect = false;
+			if (GUILayout.Button (/*Relay*/Localizer.Format ("#autoLOC_AH_0003"), AHUIStyling.ButtonDefault)) {
+				AntennaHelperEditor.selectAntennaIsDirect = false;
+				// TODO: calculate new values
 			}
 			GUILayout.EndHorizontal ();
 			// Number display :
-			float width = AntennaHelperEditor.EditorWindows["MainWindow"].Position.width * .4f;
 			GUILayout.BeginHorizontal ();
-			GUILayout.Label (/*Selected type*/Localizer.Format ("#autoLOC_AH_0004") + " : ", GUILayout.Width(width));
-			GUILayout.Label(antennaTypeStr);
+			GUILayout.Label (/*Selected type*/Localizer.Format ("#autoLOC_AH_0004") + " : ", AHUIStyling.DefaultLabel,GUILayout.Width(widthFirstCol));
+			GUILayout.Label(GetAntennaTypeText(AntennaHelperEditor.selectAntennaIsDirect), AHUIStyling.DefaultLabel);
 			GUILayout.EndHorizontal();
 			GUILayout.BeginHorizontal();
-			GUILayout.Label(/*Status*/Localizer.Format("#autoLOC_AH_0008") + " : ", GUILayout.Width(width));
+			GUILayout.Label(/*Status*/Localizer.Format("#autoLOC_AH_0008") + " : ",AHUIStyling.DefaultLabel,  GUILayout.Width(widthFirstCol));
 			// GUILayout.Label(antennaTypeIsDirect ? AHEditor.statusStringDirect : AHEditor.statusStringRelay);
 			GUILayout.EndHorizontal();
 			GUILayout.BeginHorizontal();
-			GUILayout.Label(/*Power*/Localizer.Format("#autoLOC_AH_0009") + " : ", GUILayout.Width(width));
+			GUILayout.Label(/*Power*/Localizer.Format("#autoLOC_AH_0009") + " : ",AHUIStyling.DefaultLabel, GUILayout.Width(widthFirstCol));
 			// GUILayout.Label(antennaTypeIsDirect ? AHEditor.directBetterPower.ToString("N0"): AHEditor.relayBetterPower.ToString("N0"));
 			GUILayout.EndHorizontal();
 			GUILayout.BeginHorizontal();
-			GUILayout.Label(/*Max Range*/Localizer.Format("#autoLOC_AH_0010") + " : ", GUILayout.Width(width));
+			GUILayout.Label(/*Max Range*/Localizer.Format("#autoLOC_AH_0010") + " : ",AHUIStyling.DefaultLabel, GUILayout.Width(widthFirstCol));
 			// GUILayout.Label(antennaTypeIsDirect ? AHEditor.directBetterRange.ToString("N0") + "m" : AHEditor.relayBetterRange.ToString("N0") + "m");
 			GUILayout.EndHorizontal();
 			GUILayout.BeginHorizontal();
-			GUILayout.Label(/*Max Distance At 100%*/Localizer.Format("#autoLOC_AH_0011") + " : ", GUILayout.Width(width));
+			GUILayout.Label(/*Max Distance At 100%*/Localizer.Format("#autoLOC_AH_0011") + " : ",AHUIStyling.DefaultLabel, GUILayout.Width(widthFirstCol));
 			// GUILayout.Label(antennaTypeIsDirect ? AHEditor.directDistanceAt100.ToString("N0") + "m": AHEditor.relayDistanceAt100.ToString("N0") + "m");
 			GUILayout.EndHorizontal();
 			AHUIStyling.DrawSeparator();
@@ -106,19 +147,24 @@ public class AHEditorWindows
 			
 			// Planet view button
 			if (GUILayout.Button (/*Signal Strength / Distance*/Localizer.Format ("#autoLOC_AH_0060") 
-				+ " / " + Localizer.Format ("#autoLOC_AH_0059")))
-			/*{
-				if (AHEditor.showPlanetWindow) {
-					AHEditor.ClosePlanetWindow ();
-				} else {
-					AHEditor.showPlanetWindow = true;
+				+ " / " + Localizer.Format ("#autoLOC_AH_0059"), AHUIStyling.ButtonDefault))
+				{
+					if (AntennaHelperEditor.EditorWindows["EditorPlanet"].IsVisible) {
+						AntennaHelperEditor.CloseWindow("EditorPlanet");
+					} else {
+						AntennaHelperEditor.ShowWindow("EditorPlanet");
+					}
 				}
-			}*/
 
+			// not implemented yet
 			/*if (GUILayout.Button (/*Add Ship to the Target List#1#Localizer.Format ("#autoLOC_AH_0013"))) {
 				AHEditor.AddShipToShipList ();
 			}*/
-
+			
+			// Label for debugging
+			GUILayout.Label("Antenna Count", AHUIStyling.DefaultLabel);
+			GUILayout.Label(AntennaHelperEditor.EditorShipAntennas.antennas.Count.ToString(), AHUIStyling.DefaultLabel);
+			//GUILayout.Label (AntennaHelperEditor.trackingStationLevel.ToString("N2"));
 			GUILayout.EndVertical ();
 			GUI.DragWindow ();
 		}
@@ -130,74 +176,44 @@ public class AHEditorWindows
 			
 			// DSN Selector
 			GUILayout.BeginVertical ();
-			GUIStyle TargetButtonStyle = AHUIStyling.ButtonDefault;
+			GUIStyle DSNButtonStyle = AHUIStyling.ButtonDefault;
 			for (int i = 0 ; i < 3 ; i++) {
-				
-				String dsnStr = /*DSN Level*/ Localizer.Format ("#autoLOC_AH_0015") + " " + (i + 1) + "  (" + GameVariables.Instance.GetDSNRange (i / 2f).ToString ("N0") + ")";
-				if (GUILayout.Button(dsnStr, AHUIStyling.ButtonDefault))
+				String dsnStr = /*DSN Level*/ Localizer.Format ("#autoLOC_AH_0015") + " " + (i + 1) + "  ( " + ToKMG(GameVariables.Instance.GetDSNRange (i / 2f)) + " )";
+				if (i / 2f == AntennaHelperEditor.trackingStationLevel) {
+					DSNButtonStyle = AHUIStyling.ButtonBold;
+					dsnStr = "**" + dsnStr + "**";
+				} else {
+					DSNButtonStyle = AHUIStyling.ButtonDefault;
+				}				
+				if (GUILayout.Button(dsnStr, DSNButtonStyle))
 				{
-					
+					// TODO: Close window and update Target
 				}
-
-				/*string dsnStr;
-				if (i / 2f == AHEditor.trackingStationLevel) {
-					dsnStr = "** " + /*DSN Level#1#Localizer.Format ("#autoLOC_AH_0015") + " " + (i + 1) + "  (" + GameVariables.Instance.GetDSNRange (i / 2f).ToString ("N0") + ") **";
-				} else {
-					dsnStr = /*DSN Level#1#Localizer.Format ("#autoLOC_AH_0015") + " " + (i + 1) + "  (" + GameVariables.Instance.GetDSNRange (i / 2f).ToString ("N0") + ")";
-				}
-
-				if ((AHEditor.targetType == AHEditorTargetType.DSN)
-					&& (AHEditor.targetName == /*DSN Level#1#Localizer.Format ("#autoLOC_AH_0015") + " " + (i + 1).ToString ())) {
-
-					guiStyle = guiStyleBold;
-				} else {
-					guiStyle = guiStyleNorm;
-				}
-
-				if (GUILayout.Button (dsnStr, guiStyle)) {
-					AHEditor.SetTarget (i / 2f);
-				}*/
 			}
 
-			// Ship Selector
+			// Ship Selector (In-Flight Ships)
 			GUILayout.BeginHorizontal ();
-			/*if (AHEditor.targetType == AHEditorTargetType.FLIGHT) {
-				guiStyle = guiStyleBold;
-			} else {
-				guiStyle = guiStyleNorm;
-			}*/
 			if (GUILayout.Button (/*In-Flight Ships*/Localizer.Format ("#autoLOC_AH_0016"), AHUIStyling.ButtonDefault)) {
-				/*if (HighLogic.CurrentGame.Mode != Game.Modes.MISSION_BUILDER) {
-					AHEditor.CloseTargetShipEditorWindow ();
-					AHEditor.CloseTargetPartWindow ();
-					AHEditor.showTargetShipFlightWindow = true;
-				}*/
+				AntennaHelperEditor.CloseWindow("EditorTarget");
+				AntennaHelperEditor.CloseWindow("EditorTargetShipEditor");
+				AntennaHelperEditor.CloseWindow("EditorTargetPart");
+				AntennaHelperEditor.ShowWindow("EditorTargetShipFlight");
 			}
-
-			/*if (AHEditor.targetType == AHEditorTargetType.EDITOR) {
-				guiStyle = guiStyleBold;
-			} else {
-				guiStyle = guiStyleNorm;
-			}*/
+			// Ship Selector (Editor Ships)
 			if (GUILayout.Button (/*Editor Ships*/Localizer.Format ("#autoLOC_AH_0017"), AHUIStyling.ButtonDefault)) {
-				/*AHEditor.CloseTargetShipFlightWindow ();
-				AHEditor.CloseTargetPartWindow ();
-				AHEditor.showTargetShipEditorWindow = true;*/
+				AntennaHelperEditor.CloseWindow("EditorTarget");
+				AntennaHelperEditor.CloseWindow("EditorTargetShipFlight");
+				AntennaHelperEditor.CloseWindow("EditorTargetPart");
+				AntennaHelperEditor.ShowWindow("EditorTargetShipEditor");
 			}
-
 			// Parts Selector
-			/*if (AHEditor.targetType == AHEditorTargetType.PART) {
-				guiStyle = guiStyleBold;
-			} else {
-				guiStyle = guiStyleNorm;
-			}*/
 			if (GUILayout.Button (/*Antenna Parts*/Localizer.Format ("#autoLOC_AH_0018"), AHUIStyling.ButtonDefault)) {
-				/*AHEditor.CloseTargetShipEditorWindow ();
-				AHEditor.CloseTargetShipFlightWindow ();
-				AHEditor.showTargetPartWindow = true;*/
+				AntennaHelperEditor.CloseWindow("EditorTarget");
+				AntennaHelperEditor.CloseWindow("EditorTargetShipFlight");
+				AntennaHelperEditor.CloseWindow("EditorTargetShipEditor");
+				AntennaHelperEditor.ShowWindow("EditorTargetPart");
 			}
 			GUILayout.EndHorizontal ();
-
 			GUILayout.EndVertical ();
 			GUI.DragWindow ();
 		}
