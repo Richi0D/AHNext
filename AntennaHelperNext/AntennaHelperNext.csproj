@@ -40,6 +40,7 @@
         <Compile Include="AHEditorWindows.cs" />
         <Compile Include="AHSettings.cs" />
         <Compile Include="AHUIStyling.cs" />
+        <Compile Include="AHUtil.cs" />
         <Compile Include="AHWindow.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
     </ItemGroup>

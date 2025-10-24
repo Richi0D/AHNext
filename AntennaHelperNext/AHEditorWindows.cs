@@ -164,6 +164,10 @@ namespace AntennaHelperNext
 			// Label for debugging
 			GUILayout.Label("Antenna Count", AHUIStyling.DefaultLabel);
 			GUILayout.Label(AntennaHelperEditor.EditorShipAntennas.antennas.Count.ToString(), AHUIStyling.DefaultLabel);
+			GUILayout.Label("Antenna range manual", AHUIStyling.DefaultLabel);
+			GUILayout.Label(AHUtil.GetMaxRange(100000, 100000).ToString(), AHUIStyling.DefaultLabel);
+			GUILayout.Label("Antenna range ksp", AHUIStyling.DefaultLabel);
+			GUILayout.Label(AHUtil.GetRangeKSP(100000, 100000).ToString(), AHUIStyling.DefaultLabel);
 			//GUILayout.Label (AntennaHelperEditor.trackingStationLevel.ToString("N2"));
 			GUILayout.EndVertical ();
 			GUI.DragWindow ();

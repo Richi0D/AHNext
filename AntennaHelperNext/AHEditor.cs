@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEngine;
 using KSP.Localization;
 using ToolbarControl_NS;
+using UnityEngine.UIElements;
 
 namespace AntennaHelperNext
 {
@@ -43,12 +44,14 @@ namespace AntennaHelperNext
             
             // fetch Antennas
             EditorShipAntennas.FetchAntennas(EditorLogic.fetch.ship.Parts);
-
+            // DoTheMath();
+			
+            // attach editor logic to each event
             GameEvents.onEditorLoad.Add (VesselLoad);
             GameEvents.onEditorPartEvent.Add (PartEvent);
             GameEvents.onEditorPodPicked.Add (PodPicked);
             GameEvents.onEditorPodDeleted.Add (PodDeleted);
-
+            GameEvents.onEditorUndo.Add (EditorUndo);
         }
         
         // onDestroy is called when the instance is being destroyed
@@ -59,10 +62,12 @@ namespace AntennaHelperNext
             GameEvents.onGUIApplicationLauncherDestroyed.Remove (RemoveToolbarButton);
             RemoveToolbarButton();
 
+	        // remove editor logic from each event
             GameEvents.onEditorLoad.Remove (VesselLoad);
             GameEvents.onEditorPartEvent.Remove (PartEvent);
             GameEvents.onEditorPodPicked.Remove (PodPicked);
             GameEvents.onEditorPodDeleted.Remove (PodDeleted);
+            GameEvents.onEditorUndo.Remove (EditorUndo);
             
             // save positions and at last destroy the instance
 			AntennaHelperSettings.Save();
@@ -88,25 +93,76 @@ namespace AntennaHelperNext
             }
         }
         
-        // VesselLoad is called when a ship is loaded
         public void VesselLoad (ShipConstruct ship, KSP.UI.Screens.CraftBrowserDialog.LoadType screenType)
         {
-	        EditorShipAntennas.FetchAntennas(ship.Parts);
-	        //DoTheMath ();
+	        RefreshAntennas();
         }
-        
         public void PodDeleted ()
         {
-	        EditorShipAntennas.FetchAntennas(EditorLogic.fetch.ship.Parts);
-	        //DoTheMath ();
+	        RefreshAntennas();
         }
-
         public void PodPicked (Part part = null)
         {
-	        EditorShipAntennas.FetchAntennas(EditorLogic.fetch.ship.Parts);
-	        //DoTheMath ();
+	        RefreshAntennas();
+        }
+        public void EditorUndo (ShipConstruct ship)
+        {
+	        RefreshAntennas();
         }
         
+        private void RefreshAntennas()
+        {
+	        EditorShipAntennas.FetchAntennas(EditorLogic.fetch.ship.Parts);
+	        // DoTheMath();
+        }
+        
+        public void PartEvent (ConstructionEventType eventType, Part part)
+        {
+	        
+	        if (part == null) return;
+	        if (eventType != ConstructionEventType.PartAttached && eventType != ConstructionEventType.PartDetached)
+		        return;
+	        
+	        // we only need to change the list if it actually has a ModuleDataTransmitter
+	        var transmitters = part.FindModulesImplementing<ModuleDataTransmitter>();
+	        if (transmitters == null || transmitters.Count == 0)
+		        return;
+	        
+	        if (eventType == ConstructionEventType.PartAttached)
+	        {
+		        EditorShipAntennas.AddAntenna(part);
+		        // Symmetry counterparts
+		        foreach (Part symPart in part.symmetryCounterparts)
+		        {
+			        EditorShipAntennas.AddAntenna(symPart);
+		        }
+		        // Child part
+		        foreach (Part childPart in part.children)
+		        {
+			        EditorShipAntennas.AddAntenna(childPart);
+		        }
+		        //DoTheMath ();
+	        }
+
+	        if (eventType == ConstructionEventType.PartDetached)
+	        {
+		        EditorShipAntennas.RemoveAntenna(part);
+		        // Symmetry counterparts
+		        foreach (ModuleDataTransmitter antennaSym in EditorShipAntennas.antennas.ToList())
+		        {
+			        if (antennaSym.part.isSymmetryCounterPart(part))
+			        {
+				        EditorShipAntennas.RemoveAntenna(antennaSym);
+			        }
+		        }
+		        // Child part
+		        foreach (Part childPart in part.children)
+		        {
+			        EditorShipAntennas.RemoveAntenna(childPart);
+		        }
+		        //DoTheMath ();
+	        }
+        }
         
         #region GUI
         // window positions

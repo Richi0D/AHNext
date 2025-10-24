@@ -17,10 +17,7 @@ namespace AntennaHelperNext
             antennas.Clear();
             foreach (Part part in parts)
             {
-                foreach (ModuleDataTransmitter antenna in part.FindModulesImplementing<ModuleDataTransmitter>())
-                {
-                    antennas.Add(antenna);
-                }
+                AddAntenna(part);
             }
         }
         
@@ -32,6 +29,30 @@ namespace AntennaHelperNext
         public void AddAntenna(ModuleDataTransmitter antenna)
         {
             antennas.Add(antenna);
+        }
+        public void AddAntenna(Part part)
+        {
+            foreach (ModuleDataTransmitter antenna in part.FindModulesImplementing<ModuleDataTransmitter>())
+            {
+                antennas.Add(antenna);
+            }
+        }
+        public void RemoveAntenna(ModuleDataTransmitter antenna)
+        {
+            if (antennas.Contains(antenna))
+            {
+                antennas.Remove(antenna);
+            }
+        }
+        public void RemoveAntenna(Part part)
+        {
+            foreach (ModuleDataTransmitter antenna in part.FindModulesImplementing<ModuleDataTransmitter>())
+            {
+                if (antennas.Contains(antenna))
+                {
+                    antennas.Remove(antenna);
+                }
+            }
         }
     }
 }
