@@ -24,12 +24,14 @@ namespace AntennaHelperNext
 		public static Texture signalPerDistanceTex;
 		public static float uiScale;
 		public static Texture2D separatorTex;
+		public static Color EditorbarColor;
 
 		void Start()
 		{
 			ApplicationRootPath = KSPUtil.ApplicationRootPath;
 			// Load textures
 			signalPerDistanceTex = (Texture)GameDatabase.Instance.GetTexture ("AntennaHelperNext/Textures/signal_per_distance", false);
+			EditorbarColor = new Color(122f/255, 161f/255, 186f/255);
 			// scaling parameter
 			uiScale = GameSettings.UI_SCALE;
 			// create texture for gui seperator

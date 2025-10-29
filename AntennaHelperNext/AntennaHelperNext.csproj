@@ -39,6 +39,7 @@
         <Compile Include="AHEditor.cs" />
         <Compile Include="AHEditorWindows.cs" />
         <Compile Include="AHSettings.cs" />
+        <Compile Include="AHShipList.cs" />
         <Compile Include="AHUIStyling.cs" />
         <Compile Include="AHUtil.cs" />
         <Compile Include="AHWindow.cs" />

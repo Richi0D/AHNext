@@ -2,13 +2,15 @@
 
 namespace AntennaHelperNext
 {
-    [KSPAddon(KSPAddon.Startup.MainMenu, true)]
-    public class AHUIStyling
+    public static class AHUIStyling
     {
         public static readonly GUIStyle DefaultLabel;
         public static readonly GUIStyle BoldLabel;
         public static readonly GUIStyle CenterLabel;
         public static readonly GUIStyle HeaderLabel;
+        public static readonly GUIStyle EditorBarLabelLeft;
+        public static readonly GUIStyle EditorBarLabelCenter;
+        public static readonly GUIStyle EditorBarLabelRight;
         public static readonly GUIStyle SeparatorLine;
         public static readonly GUIStyle ButtonDefault;
         public static readonly GUIStyle ButtonBold;
@@ -30,7 +32,8 @@ namespace AntennaHelperNext
             // Centered label
             CenterLabel = new GUIStyle(GUI.skin.GetStyle("Label"))
             {
-                alignment = TextAnchor.MiddleCenter
+                alignment = TextAnchor.MiddleCenter,
+                stretchWidth = true,
             };
 
             // Header label (bold)
@@ -42,6 +45,23 @@ namespace AntennaHelperNext
                 //fontSize = GUI.skin.label.fontSize + 2 //Does not work
             };
             
+            // Editor Bar Text
+            EditorBarLabelLeft = new GUIStyle(GUI.skin.GetStyle("Label"))
+            {
+                alignment = TextAnchor.MiddleLeft,
+            };
+            EditorBarLabelLeft.normal.textColor = Color.black;
+            EditorBarLabelCenter = new GUIStyle(GUI.skin.GetStyle("Label"))
+            {
+                alignment = TextAnchor.MiddleCenter,
+            };
+            EditorBarLabelCenter.normal.textColor = Color.black;
+            EditorBarLabelRight = new GUIStyle(GUI.skin.GetStyle("Label"))
+            {
+                alignment = TextAnchor.MiddleRight,
+            };
+            EditorBarLabelRight.normal.textColor = Color.black;
+            
             // Default Button
             ButtonDefault = new GUIStyle (GUI.skin.GetStyle("Button"));
             
@@ -52,12 +72,10 @@ namespace AntennaHelperNext
             // Red button
             ButtonRed = new GUIStyle(GUI.skin.GetStyle("Button"));
             ButtonRed.normal.textColor = Color.red;
-            ButtonRed.hover.textColor = Color.red;
 
             // Green button
             ButtonGreen = new GUIStyle(GUI.skin.GetStyle("Button"));
             ButtonGreen.normal.textColor = Color.green;
-            ButtonGreen.hover.textColor = Color.green;
         }
         
         public static void DrawSeparator(float height = 2f)

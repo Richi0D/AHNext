@@ -19,10 +19,10 @@ namespace AntennaHelperNext
 	    // Target variables
 	    public static double targetPower = 0;
 	    public static string targetName = "";
+	    public static AHTargetType targetType = AHTargetType.DSN;
 	    // Vessel variables
-	    public static bool selectAntennaIsDirect = true;
 	    public static ShipAntennas EditorShipAntennas = new ShipAntennas();
-	    
+	    public static AHShipList ShipList = new AHShipList();
 	    
         // Start is called before the first frame update
         public void Start()
@@ -37,6 +37,7 @@ namespace AntennaHelperNext
             trackingStationLevel = ScenarioUpgradeableFacilities.GetFacilityLevel (SpaceCenterFacility.TrackingStation);
             targetPower = GameVariables.Instance.GetDSNRange (trackingStationLevel);
             targetName = Localizer.Format ("#autoLOC_AH_0015") + " " + (int)(trackingStationLevel * 2 + 1);
+			targetType = AHTargetType.DSN;
             
             // Toolbar
             GameEvents.onGUIApplicationLauncherReady.Add (AddToolbarButton);
@@ -44,7 +45,7 @@ namespace AntennaHelperNext
             
             // fetch Antennas
             EditorShipAntennas.FetchAntennas(EditorLogic.fetch.ship.Parts);
-            // DoTheMath();
+            EditorShipAntennas.UpdateRanges(targetPower);
 			
             // attach editor logic to each event
             GameEvents.onEditorLoad.Add (VesselLoad);
@@ -113,7 +114,7 @@ namespace AntennaHelperNext
         private void RefreshAntennas()
         {
 	        EditorShipAntennas.FetchAntennas(EditorLogic.fetch.ship.Parts);
-	        // DoTheMath();
+	        EditorShipAntennas.UpdateRanges(targetPower);
         }
         
         public void PartEvent (ConstructionEventType eventType, Part part)
@@ -141,14 +142,13 @@ namespace AntennaHelperNext
 		        {
 			        EditorShipAntennas.AddAntenna(childPart);
 		        }
-		        //DoTheMath ();
 	        }
 
 	        if (eventType == ConstructionEventType.PartDetached)
 	        {
 		        EditorShipAntennas.RemoveAntenna(part);
 		        // Symmetry counterparts
-		        foreach (ModuleDataTransmitter antennaSym in EditorShipAntennas.antennas.ToList())
+		        foreach (ModuleDataTransmitter antennaSym in EditorShipAntennas.Antennas.ToList())
 		        {
 			        if (antennaSym.part.isSymmetryCounterPart(part))
 			        {
@@ -160,8 +160,9 @@ namespace AntennaHelperNext
 		        {
 			        EditorShipAntennas.RemoveAntenna(childPart);
 		        }
-		        //DoTheMath ();
 	        }
+	        EditorShipAntennas.UpdateAntennas();
+	        EditorShipAntennas.UpdateRanges(targetPower);
         }
         
         #region GUI
@@ -171,7 +172,7 @@ namespace AntennaHelperNext
         {
 	        { "EditorMain", new WindowInfo(
 		        835298,
-		        new Rect(AntennaHelperSettings.WindowPositions["editor_main_window_position"], new Vector2(390, 500)),
+		        new Rect(AntennaHelperSettings.WindowPositions["editor_main_window_position"], new Vector2(450, 450)),
 		        AHEditorWindows.MainWindow,
 		        Localizer.Format ("#autoLOC_AH_0001"),
 		        saveKey:"editor_main_window_position")

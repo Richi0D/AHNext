@@ -54,7 +54,36 @@ namespace AntennaHelperNext
 		
 		public static void MainWindow (int id)
 		{
-			float widthFirstCol = AntennaHelperEditor.EditorWindows["EditorMain"].Position.width * .4f;
+			float widthFirstCol = AntennaHelperEditor.EditorWindows["EditorMain"].Position.width * .26f;
+			float widthSecondCol = AntennaHelperEditor.EditorWindows["EditorMain"].Position.width * .37f;
+			// Signal bar positions, 4 colors and 5 labels, list contains pos x and width for each label
+			float margins = 10f;
+			float barlabelmulitplier = (AntennaHelperEditor.EditorWindows["EditorMain"].Position.width-2*margins)/8;
+			List<float> pos100 = new List<float>
+			{
+				margins,
+				barlabelmulitplier,
+			};
+			List<float> pos75 = new List<float>
+			{
+				margins + barlabelmulitplier,
+				barlabelmulitplier*2,
+			};			
+			List<float> pos50 = new List<float>
+			{
+				margins + barlabelmulitplier*3,
+				barlabelmulitplier*2,
+			};	
+			List<float> pos25 = new List<float>
+			{
+				margins + barlabelmulitplier*5,
+				barlabelmulitplier*2,
+			};				
+			List<float> pos0 = new List<float>
+			{
+				margins + barlabelmulitplier*7,
+				barlabelmulitplier,
+			};				
 			
 			// Close Button
 			DrawCloseButton("EditorMain");
@@ -65,7 +94,7 @@ namespace AntennaHelperNext
 			GUILayout.Space (5f);
 			
 			// Target Selection
-			GUILayout.Label(/*Target*/Localizer.Format ("#autoLOC_AH_0100"), AHUIStyling.HeaderLabel);
+			//GUILayout.Label(/*Target*/Localizer.Format ("#autoLOC_AH_0100"), AHUIStyling.HeaderLabel);
 			if (GUILayout.Button (/*Pick A Target*/Localizer.Format ("#autoLOC_AH_0007"), AHUIStyling.ButtonDefault)) {
 				if (AntennaHelperEditor.EditorWindows["EditorTarget"].IsVisible) {
 					AntennaHelperEditor.CloseWindow("EditorTarget");
@@ -78,71 +107,105 @@ namespace AntennaHelperNext
 				}
 			}
 			GUILayout.BeginHorizontal ();
-			GUILayout.Label( /*Current target*/Localizer.Format("#autoLOC_AH_0006") + " : ", AHUIStyling.DefaultLabel, GUILayout.Width(widthFirstCol));
+			GUILayout.Label( /*Current target*/Localizer.Format("#autoLOC_AH_0006") + " : ",
+				AHUIStyling.DefaultLabel, GUILayout.Width(widthFirstCol));
 			GUILayout.Label(AntennaHelperEditor.targetName, AHUIStyling.DefaultLabel);
 			GUILayout.EndHorizontal();
 			GUILayout.BeginHorizontal ();
-			GUILayout.Label( /*Target Power*/Localizer.Format("#autoLOC_AH_0101") + " : ", AHUIStyling.DefaultLabel,GUILayout.Width(widthFirstCol));
+			GUILayout.Label( /*Target Power*/Localizer.Format("#autoLOC_AH_0101") + " : ",
+				AHUIStyling.DefaultLabel,GUILayout.Width(widthFirstCol));
 			GUILayout.Label(  ToKMG(AntennaHelperEditor.targetPower), AHUIStyling.DefaultLabel);
 			GUILayout.EndHorizontal();
 			AHUIStyling.DrawSeparator();
 			
 			// Current Vessel
-			GUILayout.Label(/*Current Vessel*/Localizer.Format ("#autoLOC_AH_0102"), AHUIStyling.HeaderLabel);
-			// Choose direct / relay antennas
+			//GUILayout.Label(/*Current Vessel*/Localizer.Format ("#autoLOC_AH_0102"), AHUIStyling.HeaderLabel);
 			GUILayout.BeginHorizontal ();
-			if (GUILayout.Button (
-				/*Direct*/Localizer.Format ("#autoLOC_AH_0002") 
-				+ " (" + /*All Antennas*/Localizer.Format ("#autoLOC_AH_0005") + ")", AHUIStyling.ButtonDefault))
-			{
-				AntennaHelperEditor.selectAntennaIsDirect = true;
-				// TODO: calculate new values
-			}
-			if (GUILayout.Button (/*Relay*/Localizer.Format ("#autoLOC_AH_0003"), AHUIStyling.ButtonDefault)) {
-				AntennaHelperEditor.selectAntennaIsDirect = false;
-				// TODO: calculate new values
-			}
-			GUILayout.EndHorizontal ();
+			GUILayout.Label(/*Type*/Localizer.Format("#autoLOC_AH_0004") + " : ",
+				AHUIStyling.DefaultLabel, GUILayout.Width(widthFirstCol));
+			GUILayout.Label(/*Vessel*/Localizer.Format("#autoLOC_AH_0039"),
+				AHUIStyling.BoldLabel, GUILayout.Width(widthSecondCol));
+			GUILayout.Label(/*Relay*/Localizer.Format("#autoLOC_AH_0003"),
+				AHUIStyling.BoldLabel);	
+			GUILayout.EndHorizontal();
 			// Number display :
-			GUILayout.BeginHorizontal ();
-			GUILayout.Label (/*Selected type*/Localizer.Format ("#autoLOC_AH_0004") + " : ", AHUIStyling.DefaultLabel,GUILayout.Width(widthFirstCol));
-			GUILayout.Label(GetAntennaTypeText(AntennaHelperEditor.selectAntennaIsDirect), AHUIStyling.DefaultLabel);
+			GUILayout.BeginHorizontal();
+			GUILayout.Label(/*Status*/Localizer.Format("#autoLOC_AH_0008") + " : ",
+				AHUIStyling.DefaultLabel,  GUILayout.Width(widthFirstCol));
+			GUILayout.Label(/*Vessel*/Localizer.Format("#autoLOC_AH_0042", new string[] {
+				(AntennaHelperEditor.EditorShipAntennas.DirectCombAntennas.Count + AntennaHelperEditor.EditorShipAntennas.RelayCombAntennas.Count).ToString (),
+				AntennaHelperEditor.EditorShipAntennas.Antennas.Count.ToString ()
+			}), AHUIStyling.DefaultLabel, GUILayout.Width(widthSecondCol));
+			GUILayout.Label(/*Relay*/Localizer.Format("#autoLOC_AH_0042", new string[] {
+				AntennaHelperEditor.EditorShipAntennas.RelayCombAntennas.Count.ToString (),
+				AntennaHelperEditor.EditorShipAntennas.RelayAntennas.Count.ToString ()
+			}), AHUIStyling.DefaultLabel);
 			GUILayout.EndHorizontal();
 			GUILayout.BeginHorizontal();
-			GUILayout.Label(/*Status*/Localizer.Format("#autoLOC_AH_0008") + " : ",AHUIStyling.DefaultLabel,  GUILayout.Width(widthFirstCol));
-			// GUILayout.Label(antennaTypeIsDirect ? AHEditor.statusStringDirect : AHEditor.statusStringRelay);
+			GUILayout.Label(/*Power*/Localizer.Format("#autoLOC_AH_0009") + " : ",
+				AHUIStyling.DefaultLabel, GUILayout.Width(widthFirstCol));
+			GUILayout.Label(/*Vessel*/ToKMG(AntennaHelperEditor.EditorShipAntennas.VesselPower,decimalPlaces:2),
+				AHUIStyling.DefaultLabel, GUILayout.Width(widthSecondCol));
+			GUILayout.Label(/*Relay*/ToKMG(AntennaHelperEditor.EditorShipAntennas.RelayPower,decimalPlaces:2),
+				AHUIStyling.DefaultLabel);	
 			GUILayout.EndHorizontal();
 			GUILayout.BeginHorizontal();
-			GUILayout.Label(/*Power*/Localizer.Format("#autoLOC_AH_0009") + " : ",AHUIStyling.DefaultLabel, GUILayout.Width(widthFirstCol));
-			// GUILayout.Label(antennaTypeIsDirect ? AHEditor.directBetterPower.ToString("N0"): AHEditor.relayBetterPower.ToString("N0"));
+			GUILayout.Label(/*Max Range*/Localizer.Format("#autoLOC_AH_0010") + " : ",
+				AHUIStyling.DefaultLabel, GUILayout.Width(widthFirstCol));
+			GUILayout.Label(/*Vessel*/ToKMG(AntennaHelperEditor.EditorShipAntennas.VesselRangesMax[0],
+				true, 2), AHUIStyling.DefaultLabel, GUILayout.Width(widthSecondCol));
+			GUILayout.Label(/*Relay*/ToKMG(AntennaHelperEditor.EditorShipAntennas.RelayRangesMax[0],
+				true, 2), AHUIStyling.DefaultLabel);	
 			GUILayout.EndHorizontal();
 			GUILayout.BeginHorizontal();
-			GUILayout.Label(/*Max Range*/Localizer.Format("#autoLOC_AH_0010") + " : ",AHUIStyling.DefaultLabel, GUILayout.Width(widthFirstCol));
-			// GUILayout.Label(antennaTypeIsDirect ? AHEditor.directBetterRange.ToString("N0") + "m" : AHEditor.relayBetterRange.ToString("N0") + "m");
-			GUILayout.EndHorizontal();
-			GUILayout.BeginHorizontal();
-			GUILayout.Label(/*Max Distance At 100%*/Localizer.Format("#autoLOC_AH_0011") + " : ",AHUIStyling.DefaultLabel, GUILayout.Width(widthFirstCol));
-			// GUILayout.Label(antennaTypeIsDirect ? AHEditor.directDistanceAt100.ToString("N0") + "m": AHEditor.relayDistanceAt100.ToString("N0") + "m");
-			GUILayout.EndHorizontal();
+			GUILayout.Label(/*Range 100%*/Localizer.Format("#autoLOC_AH_0011") + " : ",
+				AHUIStyling.DefaultLabel, GUILayout.Width(widthFirstCol));
+			GUILayout.Label(/*Vessel*/ToKMG(AntennaHelperEditor.EditorShipAntennas.VesselRangesMax[100],
+				true, 2), AHUIStyling.DefaultLabel, GUILayout.Width(widthSecondCol));
+			GUILayout.Label(/*Relay*/ToKMG(AntennaHelperEditor.EditorShipAntennas.RelayRangesMax[100],
+				true, 2), AHUIStyling.DefaultLabel);	
+			GUILayout.EndHorizontal();			
 			AHUIStyling.DrawSeparator();
 			
 			// Signal Color Bar
 			//GUILayout.Space (16f);
+			GUILayout.Label(/*Vessel Ranges*/Localizer.Format("#autoLOC_AH_0103"), AHUIStyling.HeaderLabel);
 			GUILayout.BeginHorizontal ();
-			/*if (antennaTypeIsDirect) {
-				GUILayout.Label (AHEditor.directDistanceAt75.ToString ("N0") + "m", AHUIStyling.CenterLabel);
-				GUILayout.Label (AHEditor.directDistanceAt25.ToString ("N0") + "m", AHUIStyling.CenterLabel);
-			} else {
-				GUILayout.Label (AHEditor.relayDistanceAt75.ToString ("N0") + "m", AHUIStyling.CenterLabel);
-				GUILayout.Label (AHEditor.relayDistanceAt25.ToString ("N0") + "m", AHUIStyling.CenterLabel);
-			}*/
+			GUILayout.Label(/*Placeholder*/"", AHUIStyling.DefaultLabel, GUILayout.Width(pos100[1]));
+			GUILayout.Label(/*75*/ToKMG(AntennaHelperEditor.EditorShipAntennas.VesselRangesMax[75],
+				true, 2), AHUIStyling.CenterLabel, GUILayout.Width(pos75[1]));
+			GUILayout.Label(/*50*/ToKMG(AntennaHelperEditor.EditorShipAntennas.VesselRangesMax[50],
+				true, 2), AHUIStyling.CenterLabel, GUILayout.Width(pos50[1]));
+			GUILayout.Label(/*25*/ToKMG(AntennaHelperEditor.EditorShipAntennas.VesselRangesMax[25],
+				true, 2), AHUIStyling.CenterLabel, GUILayout.Width(pos25[1]));
+			// GUILayout.Label(/*0*/ToKMG(AntennaHelperEditor.EditorShipAntennas.VesselRangesMax[0],
+			// 	true, 2), AHUIStyling.CenterLabel, GUILayout.Width(pos100[1]));			
 			GUILayout.EndHorizontal ();
-			GUILayout.Label (StartVariables.signalPerDistanceTex);
-			/*if (antennaTypeIsDirect) {
-				GUILayout.Label (AHEditor.directDistanceAt50.ToString ("N0") + "m", guiStyleCenter);
-			} else {
-				GUILayout.Label (AHEditor.relayDistanceAt50.ToString ("N0") + "m", guiStyleCenter);
-			}*/
+			GUILayout.Label (StartVariables.signalPerDistanceTex, GUILayout.ExpandWidth(true));
+			// position the text labels on the signal bar
+			Rect baseRect = GUILayoutUtility.GetLastRect();
+			Rect rect100   = new Rect(pos100[0] + 2, baseRect.y, pos100[1], baseRect.height);
+			Rect rect75   = new Rect(pos75[0], baseRect.y, pos75[1], baseRect.height);
+			Rect rect50 = new Rect(pos50[0], baseRect.y, pos50[1], baseRect.height);
+			Rect rect25   = new Rect(pos25[0], baseRect.y, pos25[1], baseRect.height);
+			Rect rect0   = new Rect(pos0[0], baseRect.y, pos0[1], baseRect.height);
+			GUI.Label(rect100, "100%", AHUIStyling.EditorBarLabelLeft);
+			GUI.Label(rect75, "75%", AHUIStyling.EditorBarLabelCenter);
+			GUI.Label(rect50, "50%", AHUIStyling.EditorBarLabelCenter);
+			GUI.Label(rect25, "25%", AHUIStyling.EditorBarLabelCenter);
+			GUI.Label(rect0, "0%", AHUIStyling.EditorBarLabelRight);
+			GUILayout.BeginHorizontal ();
+			GUILayout.Label(/*Placeholder*/"", AHUIStyling.DefaultLabel, GUILayout.Width(pos100[1]));
+			GUILayout.Label(/*75*/ToKMG(AntennaHelperEditor.EditorShipAntennas.RelayRangesMax[75],
+				true, 2), AHUIStyling.CenterLabel, GUILayout.Width(pos75[1]));
+			GUILayout.Label(/*50*/ToKMG(AntennaHelperEditor.EditorShipAntennas.RelayRangesMax[50],
+				true, 2), AHUIStyling.CenterLabel, GUILayout.Width(pos50[1]));
+			GUILayout.Label(/*25*/ToKMG(AntennaHelperEditor.EditorShipAntennas.RelayRangesMax[25],
+				true, 2), AHUIStyling.CenterLabel, GUILayout.Width(pos25[1]));
+			// GUILayout.Label(/*0*/ToKMG(AntennaHelperEditor.EditorShipAntennas.RelayRangesMax[0],
+			// 	true, 2), AHUIStyling.CenterLabel, GUILayout.Width(pos0[1]));			
+			GUILayout.EndHorizontal ();	
+			GUILayout.Label(/*Relay Ranges*/Localizer.Format("#autoLOC_AH_0104"), AHUIStyling.HeaderLabel);
 			AHUIStyling.DrawSeparator();
 			
 			// Planet view button
@@ -162,12 +225,6 @@ namespace AntennaHelperNext
 			}*/
 			
 			// Label for debugging
-			GUILayout.Label("Antenna Count", AHUIStyling.DefaultLabel);
-			GUILayout.Label(AntennaHelperEditor.EditorShipAntennas.antennas.Count.ToString(), AHUIStyling.DefaultLabel);
-			GUILayout.Label("Antenna range manual", AHUIStyling.DefaultLabel);
-			GUILayout.Label(AHUtil.GetMaxRange(100000, 100000).ToString(), AHUIStyling.DefaultLabel);
-			GUILayout.Label("Antenna range ksp", AHUIStyling.DefaultLabel);
-			GUILayout.Label(AHUtil.GetRangeKSP(100000, 100000).ToString(), AHUIStyling.DefaultLabel);
 			//GUILayout.Label (AntennaHelperEditor.trackingStationLevel.ToString("N2"));
 			GUILayout.EndVertical ();
 			GUI.DragWindow ();
@@ -191,7 +248,12 @@ namespace AntennaHelperNext
 				}				
 				if (GUILayout.Button(dsnStr, DSNButtonStyle))
 				{
-					// TODO: Close window and update Target
+					AntennaHelperEditor.CloseWindow("EditorTarget");
+					AntennaHelperEditor.targetPower = GameVariables.Instance.GetDSNRange (i / 2f);
+					AntennaHelperEditor.targetName = Localizer.Format("#autoLOC_AH_0015") + " " +
+					                                 (int)((i / 2f) * 2 + 1);
+					AntennaHelperEditor.targetType = AHTargetType.DSN;
+					AntennaHelperEditor.EditorShipAntennas.UpdateRanges(AntennaHelperEditor.targetPower);
 				}
 			}
 
