@@ -4,13 +4,14 @@ using UnityEngine;
 
 namespace AntennaHelperNext
 {
-    public class ShipAntennas
+    public class AHShipAntennas
     {
         public List<ModuleDataTransmitter> Antennas = new List<ModuleDataTransmitter>();
         public List<ModuleDataTransmitter> DirectAntennas = new List<ModuleDataTransmitter>();
         public List<ModuleDataTransmitter> DirectCombAntennas = new List<ModuleDataTransmitter>();
         public List<ModuleDataTransmitter> RelayAntennas = new List<ModuleDataTransmitter>();
         public List<ModuleDataTransmitter> RelayCombAntennas = new List<ModuleDataTransmitter>();
+        public List<Part> AntennasNotExtended = new List<Part>();
         public ModuleDataTransmitter StrongestAntenna = null;
         public ModuleDataTransmitter StrongestRelayAntenna = null;
         public ModuleDataTransmitter StrongestDirectAntenna = null;
@@ -34,15 +35,66 @@ namespace AntennaHelperNext
             {100, 0 } // is 99.5%%
         };
         
-    public void FetchAntennas(List<Part> parts)
+        public void FetchAntennas(List<Part> parts, bool includeNotExtended = false)
         {
             Antennas.Clear();
+            AntennasNotExtended.Clear();
             foreach (Part part in parts)
             {
+                // skip not extended antennas
+                if (!includeNotExtended)
+                {
+                    if (part.HasModuleImplementing<ModuleDeployableAntenna>()) {
+                        ModuleDeployableAntenna antDep = part.FindModuleImplementing<ModuleDeployableAntenna> ();
+                        if ((antDep.deployState != ModuleDeployablePart.DeployState.EXTENDED) 
+                            && (antDep.deployState != ModuleDeployablePart.DeployState.EXTENDING)) {
+                            AntennasNotExtended.Add(part);
+                            continue;
+                        }
+                    }
+                }
                 AddAntenna(part);
             }
             UpdateAntennas();
         }
+        
+        public void FetchAntennas(List<ProtoPartSnapshot> protParts, bool includeNotExtended = false)
+        {
+            Antennas.Clear();
+            AntennasNotExtended.Clear();
+            foreach (ProtoPartSnapshot protPart in protParts)
+            {
+                bool skipPart = false;
+                Part part = protPart.partPrefab;
+                
+                // skip not extended antennas
+                if (!includeNotExtended)
+                {
+                    // find deploy state of part
+                    foreach (ProtoPartModuleSnapshot protoModule in protPart.modules)
+                    {
+                        if (protoModule.moduleName == "ModuleDeployableAntenna")
+                        {
+                            ConfigNode moduleValues = protoModule.moduleValues;
+                            if (moduleValues.HasValue("deployState"))
+                            {
+                                // RETRACTED, EXTENDED, RETRACTING, EXTENDING or BROKEN
+                                string deployState = moduleValues.GetValue("deployState");
+                                if (deployState != "EXTENDED" && deployState != "EXTENDING")
+                                {
+                                    AntennasNotExtended.Add(part);
+                                    skipPart = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                if (skipPart) continue; // skip not extended antennas
+                AddAntenna(part);
+            }
+            UpdateAntennas();
+        }        
         
         public void ClearAntennas()
         {
@@ -81,10 +133,10 @@ namespace AntennaHelperNext
         public void UpdateAntennas()
         {
             // reset everything
-            DirectAntennas = new List<ModuleDataTransmitter>();
-            DirectCombAntennas = new List<ModuleDataTransmitter>();
-            RelayAntennas = new List<ModuleDataTransmitter>();
-            RelayCombAntennas = new List<ModuleDataTransmitter>();
+            DirectAntennas.Clear();
+            DirectCombAntennas.Clear();
+            RelayAntennas.Clear();
+            RelayCombAntennas.Clear();
             StrongestAntenna = null;
             StrongestRelayAntenna = null;
             StrongestDirectAntenna = null;

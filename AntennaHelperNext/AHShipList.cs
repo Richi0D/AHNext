@@ -5,22 +5,24 @@ using UnityEngine;
 
 namespace AntennaHelperNext
 {
-    public class AHShipList
+    public static class AHShipList
     {
         public static string VABSavePath = ShipConstruction.GetCurrentGameShipsPathFor(EditorFacility.VAB);
         public static string SPHSavePath = ShipConstruction.GetCurrentGameShipsPathFor(EditorFacility.SPH);
         public static List<string> EditorShipListVAB;
         public static List<string> EditorShipListSPH;
-        public static List<Vessel> FlightShipList;
+        public static Dictionary<Vessel, AHShipAntennas> FlightShipList;
+        public static Dictionary<ProtoVessel, AHShipAntennas> FlightProtoShipList;
 
         static AHShipList()
         {
-            EditorShipListVAB = FindShipMetaFiles(VABSavePath);
-            EditorShipListSPH = FindShipMetaFiles(SPHSavePath);
+            EditorShipListVAB = GetAllSavedShips(VABSavePath);
+            EditorShipListSPH = GetAllSavedShips(SPHSavePath);
             FlightShipList = GetAllFlyingVessels();
+            FlightProtoShipList = GetAllFlyingProtoVessels();
         }
 
-        public static List<string> FindShipMetaFiles (string folderPath)
+        public static List<string> GetAllSavedShips (string folderPath)
         {
             var ShipFiles = new List<string>();
             
@@ -32,8 +34,8 @@ namespace AntennaHelperNext
 
             try
             {
-                // Get all .loadmeta files in folder (non-recursive)
-                string[] metaFiles = Directory.GetFiles(folderPath, "*.loadmeta", SearchOption.TopDirectoryOnly);
+                // Get all .craft files in folder (non-recursive)
+                string[] metaFiles = Directory.GetFiles(folderPath, "*.craft", SearchOption.TopDirectoryOnly);
                 foreach (var file in metaFiles)
                 {
                     try
@@ -62,15 +64,60 @@ namespace AntennaHelperNext
             }
             return ShipFiles;
         }
-        
-        public static List<Vessel> GetAllFlyingVessels()
+
+        private static AHShipAntennas GetAntennasFromCraftFile(ConfigNode craftFile)
         {
-            return FlightGlobals.Vessels.FindAll(
+            
+        }
+        
+        public static Dictionary<Vessel, AHShipAntennas> GetAllFlyingVessels()
+        {
+            Dictionary<Vessel, AHShipAntennas> vesselDict = new Dictionary<Vessel, AHShipAntennas>();
+            List<Vessel> vesselList = new List<Vessel>();
+            vesselList = FlightGlobals.Vessels.FindAll(
                 v => (v.vesselType != VesselType.EVA) &&
                      (v.vesselType != VesselType.Flag) &&
                      (v.vesselType != VesselType.SpaceObject) &&
                      (v.vesselType != VesselType.Unknown) &&
                      (v.vesselType != VesselType.Debris));
+            
+            // fetch antennas for each vessel
+            foreach (Vessel vessel in vesselList)
+            {
+                AHShipAntennas shipAntennas = new AHShipAntennas();
+                shipAntennas.FetchAntennas(vessel.parts);
+                if (shipAntennas.RelayPower > 0)
+                {
+                    vesselDict.Add(vessel, shipAntennas);
+                }
+            }
+            FlightShipList = vesselDict;
+            return vesselDict;
         }
+        
+        public static Dictionary<ProtoVessel, AHShipAntennas> GetAllFlyingProtoVessels()
+        {
+            Dictionary<ProtoVessel, AHShipAntennas> vesselDict = new Dictionary<ProtoVessel, AHShipAntennas>();
+            List<ProtoVessel> vesselList = new List<ProtoVessel>();
+            vesselList = HighLogic.CurrentGame.flightState.protoVessels.FindAll(
+                v => (v.vesselType != VesselType.EVA) &&
+                     (v.vesselType != VesselType.Flag) &&
+                     (v.vesselType != VesselType.SpaceObject) &&
+                     (v.vesselType != VesselType.Unknown) &&
+                     (v.vesselType != VesselType.Debris));
+            
+            // fetch antennas for each vessel
+            foreach (ProtoVessel vessel in vesselList)
+            {
+                AHShipAntennas shipAntennas = new AHShipAntennas();
+                shipAntennas.FetchAntennas(vessel.protoPartSnapshots);
+                if (shipAntennas.RelayPower > 0)
+                {
+                    vesselDict.Add(vessel, shipAntennas);
+                }
+            }
+            FlightProtoShipList = vesselDict;
+            return vesselDict;
+        }        
     }
 }

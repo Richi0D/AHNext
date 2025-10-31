@@ -21,8 +21,7 @@ namespace AntennaHelperNext
 	    public static string targetName = "";
 	    public static AHTargetType targetType = AHTargetType.DSN;
 	    // Vessel variables
-	    public static ShipAntennas EditorShipAntennas = new ShipAntennas();
-	    public static AHShipList ShipList = new AHShipList();
+	    public static AHShipAntennas EditorShipAntennas = new AHShipAntennas();
 	    
         // Start is called before the first frame update
         public void Start()
@@ -44,8 +43,9 @@ namespace AntennaHelperNext
             GameEvents.onGUIApplicationLauncherDestroyed.Add (RemoveToolbarButton);
             
             // fetch Antennas
-            EditorShipAntennas.FetchAntennas(EditorLogic.fetch.ship.Parts);
+            EditorShipAntennas.FetchAntennas(EditorLogic.fetch.ship.Parts, true);
             EditorShipAntennas.UpdateRanges(targetPower);
+            AHShipList.GetAllFlyingProtoVessels();
 			
             // attach editor logic to each event
             GameEvents.onEditorLoad.Add (VesselLoad);
@@ -113,7 +113,7 @@ namespace AntennaHelperNext
         
         private void RefreshAntennas()
         {
-	        EditorShipAntennas.FetchAntennas(EditorLogic.fetch.ship.Parts);
+	        EditorShipAntennas.FetchAntennas(EditorLogic.fetch.ship.Parts, true);
 	        EditorShipAntennas.UpdateRanges(targetPower);
         }
         
@@ -198,7 +198,7 @@ namespace AntennaHelperNext
 			        new Rect (new Vector2 (
 					        AntennaHelperSettings.WindowPositions["editor_target_window_position"].x, 
 					        AntennaHelperSettings.WindowPositions["editor_target_window_position"].y + defaultTargetSize.y)
-				        , new Vector2 (400, 150)),
+				        , new Vector2 (defaultTargetSize.x, 150)),
 			        AHEditorWindows.TargetWindowShipEditor,
 			        Localizer.Format ("#autoLOC_AH_0017"),
 			        childWindow: "EditorTarget",
@@ -207,7 +207,10 @@ namespace AntennaHelperNext
 	        },
 	        { "EditorTargetShipFlight", new WindowInfo(
 			        892715,
-			        new Rect(AntennaHelperSettings.WindowPositions["editor_target_window_position"], defaultTargetSize),
+			        new Rect (new Vector2 (
+					        AntennaHelperSettings.WindowPositions["editor_target_window_position"].x, 
+					        AntennaHelperSettings.WindowPositions["editor_target_window_position"].y + defaultTargetSize.y)
+				        , new Vector2 (defaultTargetSize.x, 150)),
 			        AHEditorWindows.TargetWindowShipFlight,
 			        Localizer.Format ("#autoLOC_AH_0016"),
 			        childWindow: "EditorTarget",
@@ -216,7 +219,10 @@ namespace AntennaHelperNext
 	        },
 	        { "EditorTargetPart", new WindowInfo(
 			        595592,
-			        new Rect(AntennaHelperSettings.WindowPositions["editor_target_window_position"], defaultTargetSize),
+			        new Rect (new Vector2 (
+					        AntennaHelperSettings.WindowPositions["editor_target_window_position"].x, 
+					        AntennaHelperSettings.WindowPositions["editor_target_window_position"].y + defaultTargetSize.y)
+				        , new Vector2 (defaultTargetSize.x, 150)),
 			        AHEditorWindows.TargetWindowPart,
 			        Localizer.Format ("#autoLOC_AH_0031"),
 			        childWindow: "EditorTarget",
