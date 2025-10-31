@@ -38,6 +38,7 @@
         <Compile Include="AHAntennas.cs" />
         <Compile Include="AHEditor.cs" />
         <Compile Include="AHEditorWindows.cs" />
+        <Compile Include="AHPlanetList.cs" />
         <Compile Include="AHSettings.cs" />
         <Compile Include="AHShipList.cs" />
         <Compile Include="AHUIStyling.cs" />

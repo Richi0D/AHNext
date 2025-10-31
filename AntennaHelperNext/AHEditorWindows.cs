@@ -21,7 +21,8 @@ namespace AntennaHelperNext
 				{
 					// be sure other windows are closed again
 					AntennaHelperEditor.CloseWindow("EditorTargetShipFlight");
-					AntennaHelperEditor.CloseWindow("EditorTargetShipEditor");
+					AntennaHelperEditor.CloseWindow("EditorTargetShipEditorVAB");
+					AntennaHelperEditor.CloseWindow("EditorTargetShipEditorSPH");
 					AntennaHelperEditor.CloseWindow("EditorTargetPart");
 				}
 				AntennaHelperEditor.CloseWindow(windowName);
@@ -57,6 +58,48 @@ namespace AntennaHelperNext
 			else
 				return value.ToString($"F{decimalPlaces}");                                   // no suffix
 		}
+		
+		public static string GetStrongestAntennaString(
+			ModuleDataTransmitter antennaOne,
+			ModuleDataTransmitter antennaTwo)
+		{
+			ModuleDataTransmitter strongest = null;
+			string strongestAntenna = "-";
+			if (!(antennaOne is null || antennaTwo is (null)))
+			{
+				if (antennaOne.antennaPower >= antennaTwo.antennaPower)
+				{
+					strongest = antennaOne;
+				}
+				else
+				{
+					strongest = antennaTwo;
+				}
+			}
+			else if (!(antennaOne is null))
+			{
+				strongest = antennaOne;
+			}
+			else if (!(antennaTwo is null))
+			{
+				strongest = antennaTwo;
+			}
+
+			if (!(strongest is null))
+			{
+				if (strongest.antennaCombinable)
+				{
+					strongestAntenna = "(C) ";
+				}
+				else
+				{
+					strongestAntenna = "(NC) ";
+				}
+				strongestAntenna += strongest.part.partInfo.title;
+			}
+
+			return strongestAntenna;
+		}		
 		
 		
 		public static void MainWindow (int id)
@@ -108,7 +151,8 @@ namespace AntennaHelperNext
 				} else {
 					// be sure other windows are closed again
 					AntennaHelperEditor.CloseWindow("EditorTargetShipFlight");
-					AntennaHelperEditor.CloseWindow("EditorTargetShipEditor");
+					AntennaHelperEditor.CloseWindow("EditorTargetShipEditorVAB");
+					AntennaHelperEditor.CloseWindow("EditorTargetShipEditorSPH");
 					AntennaHelperEditor.CloseWindow("EditorTargetPart");
 					AntennaHelperEditor.ShowWindow("EditorTarget");
 				}
@@ -148,6 +192,16 @@ namespace AntennaHelperNext
 				AntennaHelperEditor.EditorShipAntennas.RelayAntennas.Count.ToString ()
 			}), AHUIStyling.DefaultLabel);
 			GUILayout.EndHorizontal();
+			GUILayout.BeginHorizontal();
+			GUILayout.Label(/*Strongest*/Localizer.Format("#autoLOC_AH_0107") + " : ",
+				AHUIStyling.DefaultLabel,  GUILayout.Width(widthFirstCol));
+			// get strongest antennas
+			string strongestAntenna = GetStrongestAntennaString(AntennaHelperEditor.EditorShipAntennas.StrongestAntenna, null);
+			string strongestAntennaRelay = GetStrongestAntennaString(AntennaHelperEditor.EditorShipAntennas.StrongestRelayAntenna, 
+				AntennaHelperEditor.EditorShipAntennas.StrongestRelayAntennaNonCombinable);
+			GUILayout.Label(/*Vessel*/strongestAntenna, AHUIStyling.DefaultLabel, GUILayout.Width(widthSecondCol));
+			GUILayout.Label(/*Relay*/strongestAntennaRelay, AHUIStyling.DefaultLabel);
+			GUILayout.EndHorizontal();			
 			GUILayout.BeginHorizontal();
 			GUILayout.Label(/*Power*/Localizer.Format("#autoLOC_AH_0009") + " : ",
 				AHUIStyling.DefaultLabel, GUILayout.Width(widthFirstCol));
@@ -225,19 +279,14 @@ namespace AntennaHelperNext
 						AntennaHelperEditor.ShowWindow("EditorPlanet");
 					}
 				}
-
-			// not implemented yet
-			/*if (GUILayout.Button (/*Add Ship to the Target List#1#Localizer.Format ("#autoLOC_AH_0013"))) {
-				AHEditor.AddShipToShipList ();
-			}*/
 			
 			// Label for debugging
-			GUILayout.Label ("Flight ship count");
-			GUILayout.Label (AHShipList.FlightProtoShipList.Count.ToString());
-			GUILayout.Label ("VAB ship count");
-			GUILayout.Label (AHShipList.EditorShipListVAB.Count.ToString());
-			GUILayout.Label ("SHP ship count");
-			GUILayout.Label (AHShipList.EditorShipListSPH.Count.ToString());
+			// GUILayout.Label ("Flight ship count");
+			// GUILayout.Label (AHShipList.FlightProtoShipList.Count.ToString());
+			// GUILayout.Label ("VAB ship count");
+			// GUILayout.Label (AHShipList.EditorShipListVAB.Count.ToString());
+			// GUILayout.Label ("SPH ship count");
+			// GUILayout.Label (AHShipList.EditorShipListSPH.Count.ToString());
 			GUILayout.EndVertical ();
 			GUI.DragWindow ();
 		}
@@ -249,7 +298,7 @@ namespace AntennaHelperNext
 			
 			// DSN Selector
 			GUILayout.BeginVertical ();
-			GUIStyle DSNButtonStyle = AHUIStyling.ButtonDefault;
+			GUIStyle ButtonStyle = AHUIStyling.ButtonDefault;
 			for (int i = 0 ; i < 3 ; i++) {
 				String dsnStr = /*DSN Level*/ Localizer.Format ("#autoLOC_AH_0015") + " " + (i + 1) + "  ( " + ToKMG(GameVariables.Instance.GetDSNRange (i / 2f)) + " )";
 				
@@ -261,14 +310,14 @@ namespace AntennaHelperNext
 				if (AntennaHelperEditor.targetName == Localizer.Format("#autoLOC_AH_0015") + " " +
 				    (int)((i / 2f) * 2 + 1))
 				{
-					DSNButtonStyle = AHUIStyling.ButtonRed;
+					ButtonStyle = AHUIStyling.ButtonRed;
 				}
 				else
 				{
-					DSNButtonStyle = AHUIStyling.ButtonDefault;
+					ButtonStyle = AHUIStyling.ButtonDefault;
 				}
 				
-				if (GUILayout.Button(dsnStr, DSNButtonStyle))
+				if (GUILayout.Button(dsnStr, ButtonStyle))
 				{
 					//AntennaHelperEditor.CloseWindow("EditorTarget");
 					AntennaHelperEditor.targetPower = GameVariables.Instance.GetDSNRange (i / 2f);
@@ -281,148 +330,157 @@ namespace AntennaHelperNext
 
 			// Ship Selector (In-Flight Ships)
 			GUILayout.BeginHorizontal ();
-			if (GUILayout.Button (/*In-Flight Ships*/Localizer.Format ("#autoLOC_AH_0016"), AHUIStyling.ButtonDefault)) {
+			if (AHTargetType.FLIGHT == AntennaHelperEditor.targetType)
+			{
+				ButtonStyle = AHUIStyling.ButtonRed;
+			}
+			else
+			{
+				ButtonStyle = AHUIStyling.ButtonDefault;
+			}
+			if (GUILayout.Button (/*In-Flight Ships*/Localizer.Format ("#autoLOC_AH_0016"), ButtonStyle)) {
 				//AntennaHelperEditor.CloseWindow("EditorTarget");
-				AntennaHelperEditor.CloseWindow("EditorTargetShipEditor");
+				AntennaHelperEditor.CloseWindow("EditorTargetShipEditorVAB");
+				AntennaHelperEditor.CloseWindow("EditorTargetShipEditorSPH");
 				AntennaHelperEditor.CloseWindow("EditorTargetPart");
 				AntennaHelperEditor.ShowWindow("EditorTargetShipFlight");
 			}
-			// Ship Selector (Editor Ships)
-			if (GUILayout.Button (/*Editor Ships*/Localizer.Format ("#autoLOC_AH_0017"), AHUIStyling.ButtonDefault)) {
+			// Ship Selector (Editor Ships VAB)
+			if (AHTargetType.EDITORVAB == AntennaHelperEditor.targetType)
+			{
+				ButtonStyle = AHUIStyling.ButtonRed;
+			}
+			else
+			{
+				ButtonStyle = AHUIStyling.ButtonDefault;
+			}
+			if (GUILayout.Button (/*Editor Ships*/Localizer.Format ("#autoLOC_AH_0105"), ButtonStyle)) {
 				//AntennaHelperEditor.CloseWindow("EditorTarget");
 				AntennaHelperEditor.CloseWindow("EditorTargetShipFlight");
 				AntennaHelperEditor.CloseWindow("EditorTargetPart");
-				AntennaHelperEditor.ShowWindow("EditorTargetShipEditor");
+				AntennaHelperEditor.CloseWindow("EditorTargetShipEditorSPH");
+				AntennaHelperEditor.ShowWindow("EditorTargetShipEditorVAB");
 			}
-			// Parts Selector
-			if (GUILayout.Button (/*Antenna Parts*/Localizer.Format ("#autoLOC_AH_0018"), AHUIStyling.ButtonDefault)) {
+			// Ship Selector (Editor Ships SPH)
+			if (AHTargetType.EDITORSPH == AntennaHelperEditor.targetType)
+			{
+				ButtonStyle = AHUIStyling.ButtonRed;
+			}
+			else
+			{
+				ButtonStyle = AHUIStyling.ButtonDefault;
+			}
+			if (GUILayout.Button (/*Editor Ships*/Localizer.Format ("#autoLOC_AH_0106"), ButtonStyle)) {
 				//AntennaHelperEditor.CloseWindow("EditorTarget");
 				AntennaHelperEditor.CloseWindow("EditorTargetShipFlight");
-				AntennaHelperEditor.CloseWindow("EditorTargetShipEditor");
+				AntennaHelperEditor.CloseWindow("EditorTargetPart");
+				AntennaHelperEditor.CloseWindow("EditorTargetShipEditorVAB");
+				AntennaHelperEditor.ShowWindow("EditorTargetShipEditorSPH");
+			}			
+			// Parts Selector
+			if (AHTargetType.PART == AntennaHelperEditor.targetType)
+			{
+				ButtonStyle = AHUIStyling.ButtonRed;
+			}
+			else
+			{
+				ButtonStyle = AHUIStyling.ButtonDefault;
+			}
+			if (GUILayout.Button (/*Antenna Parts*/Localizer.Format ("#autoLOC_AH_0018"), ButtonStyle)) {
+				//AntennaHelperEditor.CloseWindow("EditorTarget");
+				AntennaHelperEditor.CloseWindow("EditorTargetShipFlight");
+				AntennaHelperEditor.CloseWindow("EditorTargetShipEditorVAB");
+				AntennaHelperEditor.CloseWindow("EditorTargetShipEditorSPH");
 				AntennaHelperEditor.ShowWindow("EditorTargetPart");
+				updateTargetPowerPart();
 			}
 			GUILayout.EndHorizontal ();
 			GUILayout.EndVertical ();
 			GUI.DragWindow ();
 		}
 
-		/*private static bool vab = true;
-		private static bool relay = false;
-		private static Vector2 scrollVectorEditor;
-		private static List<Dictionary<string, string>> displayList;*/
-		public static void TargetWindowShipEditor (int id)
+		private static Vector2 scrollVectorEditorVAB;
+		public static void TargetWindowShipEditorVAB (int id)
 		{
-			/*GUIStyle guiStyleLabel;
-			GUIStyle guiStyleLabelNorm = new GUIStyle (GUI.skin.GetStyle ("Label"));
-			GUIStyle guiStyleLabelBold = new GUIStyle (GUI.skin.GetStyle ("Label"));
-			guiStyleLabelBold.fontStyle = FontStyle.Bold;
-
-			GUIStyle guiStyleButton;
-			GUIStyle guiStyleButtonNorm = new GUIStyle (GUI.skin.GetStyle ("Button"));
-			GUIStyle guiStyleButtonBold = new GUIStyle (GUI.skin.GetStyle ("Button"));
-			guiStyleButtonBold.fontStyle = FontStyle.Bold;
-
-			GUIStyle guiStyleButtonRed = new GUIStyle (GUI.skin.GetStyle ("Button"));
-			guiStyleButtonRed.fontStyle = FontStyle.Bold;
-			guiStyleButtonRed.normal.textColor = Color.red;
-			guiStyleButtonRed.hover.textColor = Color.red;*/
 
 			// Close Button
-			DrawCloseButton("EditorTargetShipEditor");
+			DrawCloseButton("EditorTargetShipEditorVAB");
 
-			/*GUILayout.BeginVertical ();
+			GUILayout.BeginVertical ();
+			scrollVectorEditorVAB = GUILayout.BeginScrollView (scrollVectorEditorVAB);
+			foreach (var item in AHShipList.EditorShipListVAB) {
+				string vessel = item.Key;
+				AHShipAntennas shipantennas = item.Value;
+				
+				string vesselName = vessel;
+				string vesselPower = ToKMG(shipantennas.RelayPower, false, 2);
+				string strButton = vesselName + " (" + vesselPower + ")";
 
-			GUILayout.BeginHorizontal ();
-			if (vab) {
-				guiStyleButton = guiStyleButtonBold;
-			} else {
-				guiStyleButton = guiStyleButtonNorm;
-			}
-			if (GUILayout.Button (/*VAB#1#Localizer.Format ("#autoLOC_AH_0019"), guiStyleButton)) {
-				vab = true;
-			}
-
-			if (vab) {
-				guiStyleButton = guiStyleButtonNorm;
-			} else {
-				guiStyleButton = guiStyleButtonBold;
-			}
-			if (GUILayout.Button (/*SPH#1#Localizer.Format ("#autoLOC_AH_0020"), guiStyleButton)) {
-				vab = false;
-			}
-			GUILayout.EndHorizontal ();
-
-			GUILayout.BeginHorizontal ();
-			GUILayout.Space (35f);
-			if (relay) {
-				guiStyleButton = guiStyleButtonNorm;
-			} else {
-				guiStyleButton = guiStyleButtonBold;
-			}
-			if (GUILayout.Button (/*All#1#Localizer.Format ("#autoLOC_AH_0021"), guiStyleButton)) {
-				relay = false;
-			}
-
-			if (relay) {
-				guiStyleButton = guiStyleButtonBold;
-			} else {
-				guiStyleButton = guiStyleButtonNorm;
-			}
-			if (GUILayout.Button (/*Relay#1#Localizer.Format ("#autoLOC_AH_0003"), guiStyleButton)) {
-				relay = true;
-			}
-			GUILayout.Space (35f);
-			GUILayout.EndHorizontal ();
-
-			scrollVectorEditor = GUILayout.BeginScrollView (scrollVectorEditor);
-			if (vab) {
-				if (relay) {
-					displayList = AHEditor.guiExternListShipEditorVabRelay;
-				} else {
-					displayList = AHEditor.guiExternListShipEditorVabAll;
+				GUIStyle buttonStyle;
+				if (AntennaHelperEditor.targetName == vesselName)
+				{
+					buttonStyle = AHUIStyling.ButtonRed;
 				}
-			} else {
-				if (relay) {
-					displayList = AHEditor.guiExternListShipEditorSphRelay;
-				} else {
-					displayList = AHEditor.guiExternListShipEditorSphAll;
+				else
+				{
+					buttonStyle = AHUIStyling.ButtonDefault;
 				}
-			}
-
-			foreach (Dictionary <string, string> vesselInfo in displayList) {
-				if ((vab && (vesselInfo ["type"] != "VAB")) || (!vab && (vesselInfo ["type"] != "SPH"))) {
-					continue;
+				
+				if (GUILayout.Button(strButton, buttonStyle)) {
+					AntennaHelperEditor.targetName = vesselName;
+					AntennaHelperEditor.targetPower = shipantennas.RelayPower;
+					AntennaHelperEditor.targetType = AHTargetType.EDITORVAB;
+					AntennaHelperEditor.EditorShipAntennas.UpdateRanges(AntennaHelperEditor.targetPower);
 				}
-
-				GUILayout.BeginHorizontal ();
-				if (GUILayout.Button (Localizer.Format ("#autoLOC_AH_0022"), GUILayout.Width (60f))) {
-					AHEditor.SetTarget (vesselInfo ["pid"]);
-				}
-
-				if (AHEditor.targetPid == vesselInfo ["pid"]) {
-					guiStyleLabel = guiStyleLabelBold;
-				} else {
-					guiStyleLabel = guiStyleLabelNorm;
-				}
-				GUILayout.Label (
-					"("
-					+ AHUtil.TruePower (Double.Parse (vesselInfo ["powerRelay"])).ToString ("N0")
-					+ ")  "
-					+ vesselInfo ["name"], guiStyleLabel);
-				if (GUILayout.Button ("X", guiStyleButtonRed, GUILayout.Width (22f))) {
-					AHEditor.RemoveShipFromShipList (vesselInfo ["pid"]);
-				}
-				GUILayout.EndHorizontal ();
 			}
 			GUILayout.EndScrollView ();
-
-			GUILayout.EndVertical ();*/
+			GUILayout.EndVertical ();
+			GUI.DragWindow ();
 		}
 
+		private static Vector2 scrollVectorEditorSPH;
+		public static void TargetWindowShipEditorSPH (int id)
+		{
+
+			// Close Button
+			DrawCloseButton("EditorTargetShipEditorSPH");
+
+			GUILayout.BeginVertical ();
+			scrollVectorEditorSPH = GUILayout.BeginScrollView (scrollVectorEditorSPH);
+			foreach (var item in AHShipList.EditorShipListSPH) {
+				string vessel = item.Key;
+				AHShipAntennas shipantennas = item.Value;
+				
+				string vesselName = vessel;
+				string vesselPower = ToKMG(shipantennas.RelayPower, false, 2);
+				string strButton = vesselName + " (" + vesselPower + ")";
+
+				GUIStyle buttonStyle;
+				if (AntennaHelperEditor.targetName == vesselName)
+				{
+					buttonStyle = AHUIStyling.ButtonRed;
+				}
+				else
+				{
+					buttonStyle = AHUIStyling.ButtonDefault;
+				}
+				
+				if (GUILayout.Button(strButton, buttonStyle)) {
+					AntennaHelperEditor.targetName = vesselName;
+					AntennaHelperEditor.targetPower = shipantennas.RelayPower;
+					AntennaHelperEditor.targetType = AHTargetType.EDITORSPH;
+					AntennaHelperEditor.EditorShipAntennas.UpdateRanges(AntennaHelperEditor.targetPower);
+				}
+			}
+			GUILayout.EndScrollView ();
+			GUILayout.EndVertical ();
+			GUI.DragWindow ();
+		}		
+		
 		private static Vector2 scrollVectorFlight;
 		public static void TargetWindowShipFlight (int id)
 		{
-
+			
 			// Close Button
 			DrawCloseButton("EditorTargetShipFlight");
 			
@@ -458,67 +516,52 @@ namespace AntennaHelperNext
 			GUI.DragWindow ();
 		}
 
-		//private static Vector2 scrollVectorPart;
+		private static void updateTargetPowerPart()
+		{
+			AntennaHelperEditor.EditorAntennasPicker.UpdateAntennas();
+			AntennaHelperEditor.targetType = AHTargetType.PART;
+			AntennaHelperEditor.targetName = AntennaHelperEditor.EditorAntennasPicker.Antennas.Count + 
+			                                 " " + Localizer.Format ("#autoLOC_AH_0018");
+			AntennaHelperEditor.targetPower = AntennaHelperEditor.EditorAntennasPicker.RelayPower;
+			AntennaHelperEditor.EditorShipAntennas.UpdateRanges(AntennaHelperEditor.targetPower);	
+		}
+		private static Vector2 scrollVectorPart;
 		public static void TargetWindowPart (int id)
 		{
-			/*GUIStyle guiStyleLabel;
-			GUIStyle guiStyleLabelNorm = new GUIStyle (GUI.skin.GetStyle ("Label"));
-			GUIStyle guiStyleLabelBold = new GUIStyle (GUI.skin.GetStyle ("Label"));
-			guiStyleLabelBold.fontStyle = FontStyle.Bold;
 
-			GUIStyle guiStyleButtonBold = new GUIStyle (GUI.skin.GetStyle ("Button"));
-			guiStyleButtonBold.fontStyle = FontStyle.Bold;*/
-
+			float widthFirstCol = AntennaHelperEditor.EditorWindows["EditorTargetPart"].Position.width * .10f;
+			float widthSecondCol = AntennaHelperEditor.EditorWindows["EditorTargetPart"].Position.width * .08f;
+			float widthThirdCol = AntennaHelperEditor.EditorWindows["EditorTargetPart"].Position.width * .08f;
 			// Close Button
 			DrawCloseButton("EditorTargetPart");
-
-
-			/*GUILayout.BeginVertical ();
+			
+			GUILayout.BeginVertical ();
 			scrollVectorPart = GUILayout.BeginScrollView (scrollVectorPart);
+			foreach (var antenna in AHShipList.AntennaPartList) {
 
-			foreach (ModuleDataTransmitter antenna in AHShipList.listAntennaPart) {
+				string antennaName = antenna.Key;
+				ModuleDataTransmitter antennaModule = antenna.Value;	
+				string antennaCount = AntennaHelperEditor.EditorAntennasPicker.countantennas(antennaModule).ToString();
+				string antennaPower = ToKMG(antennaModule.antennaPower, false, 2);
+				string strButton = antennaName + " (" + antennaPower + ")";				
 				
-				if (antenna.antennaType != AntennaType.RELAY) {
-					continue;
-				}
-
-				if (AHEditor.listAntennaPart [antenna] > 0) {
-					guiStyleLabel = guiStyleLabelBold;
-				} else {
-					guiStyleLabel = guiStyleLabelNorm;
-				}
-
 				GUILayout.BeginHorizontal ();
-
-				GUILayout.Label (AHEditor.listAntennaPart [antenna].ToString (), guiStyleLabel, GUILayout.Width (15f));
-
-				if (GUILayout.Button ("+", guiStyleButtonBold, GUILayout.Width (20f))) {
-					AHEditor.listAntennaPart [antenna]++;
-					AHEditor.UpdateTargetPartPower ();
+				GUILayout.Label (antennaCount +"x", AHUIStyling.ButtonDefault, GUILayout.Width(widthFirstCol));
+				if (GUILayout.Button ("+", AHUIStyling.ButtonBold, GUILayout.Width(widthSecondCol))) {
+					AntennaHelperEditor.EditorAntennasPicker.AddAntenna(antennaModule);
+					updateTargetPowerPart();
 				}
-				if (GUILayout.Button ("-", guiStyleButtonBold, GUILayout.Width (20f))) {
-					AHEditor.listAntennaPart [antenna]--;
-					AHEditor.UpdateTargetPartPower ();
+				if (GUILayout.Button ("-", AHUIStyling.ButtonBold, GUILayout.Width(widthThirdCol))) {
+					AntennaHelperEditor.EditorAntennasPicker.RemoveAntenna(antennaModule);
+					updateTargetPowerPart();
 				}
 
-				GUILayout.Label (
-					"(" + AHUtil.TruePower (antenna.antennaPower).ToString ("N0") + ")  " 
-					+ antenna.part.partInfo.title, guiStyleLabel);
-
+				GUILayout.Label (strButton, AHUIStyling.ButtonDefault);
 				GUILayout.EndHorizontal ();
 			}
 			GUILayout.EndScrollView ();
-
-			GUILayout.Space (10f);
-
-			GUILayout.BeginHorizontal ();
-			GUILayout.Label (/*Power#1#Localizer.Format ("#autoLOC_AH_0009") + " : " + AHEditor.targetPartPower.ToString ("N0"));
-			if (GUILayout.Button (/*Set As Target#1#Localizer.Format ("#autoLOC_AH_0023"))) {
-				AHEditor.SetTargetAsPart ();
-			}
-			GUILayout.EndHorizontal ();
-
-			GUILayout.EndVertical ();*/
+			GUILayout.EndVertical ();
+			GUI.DragWindow ();
 		}
 
 		public static void PlanetWindow (int id)

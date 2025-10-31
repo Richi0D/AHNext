@@ -9,27 +9,27 @@ namespace AntennaHelperNext
     {
         public static string VABSavePath = ShipConstruction.GetCurrentGameShipsPathFor(EditorFacility.VAB);
         public static string SPHSavePath = ShipConstruction.GetCurrentGameShipsPathFor(EditorFacility.SPH);
-        public static List<string> EditorShipListVAB;
-        public static List<string> EditorShipListSPH;
-        public static Dictionary<Vessel, AHShipAntennas> FlightShipList;
-        public static Dictionary<ProtoVessel, AHShipAntennas> FlightProtoShipList;
+        public static Dictionary<string, AHShipAntennas> EditorShipListVAB = new Dictionary<string, AHShipAntennas>();
+        public static Dictionary<string, AHShipAntennas> EditorShipListSPH = new Dictionary<string, AHShipAntennas>();
+        public static Dictionary<Vessel, AHShipAntennas> FlightShipList = new Dictionary<Vessel, AHShipAntennas>();
+        public static Dictionary<ProtoVessel, AHShipAntennas> FlightProtoShipList = new Dictionary<ProtoVessel, AHShipAntennas>();
+        public static Dictionary<string, ModuleDataTransmitter> AntennaPartList = new Dictionary<string, ModuleDataTransmitter>();
 
-        static AHShipList()
-        {
-            EditorShipListVAB = GetAllSavedShips(VABSavePath);
-            EditorShipListSPH = GetAllSavedShips(SPHSavePath);
-            FlightShipList = GetAllFlyingVessels();
-            FlightProtoShipList = GetAllFlyingProtoVessels();
-        }
+        // static AHShipList()
+        // {
+        //     EditorShipListVAB = GetAllSavedShips(VABSavePath);
+        //     EditorShipListSPH = GetAllSavedShips(SPHSavePath);
+        //     FlightShipList = GetAllFlyingVessels();
+        //     FlightProtoShipList = GetAllFlyingProtoVessels();
+        // }
 
-        public static List<string> GetAllSavedShips (string folderPath)
+        public static Dictionary<string, AHShipAntennas> GetAllSavedShips (string folderPath)
         {
-            var ShipFiles = new List<string>();
-            
+            Dictionary<string, AHShipAntennas> shipFiles = new Dictionary<string, AHShipAntennas>();
             if (!Directory.Exists(folderPath))
             {
                 Debug.LogWarning($"[AntennaHelper] Folder not found: {folderPath}");
-                return ShipFiles;
+                return shipFiles;
             }
 
             try
@@ -40,17 +40,26 @@ namespace AntennaHelperNext
                 {
                     try
                     {
-                        // Read text and look for line
-                        string[] lines = File.ReadAllLines(file);
-                        foreach (string line in lines)
+                        ConfigNode craftFile = ConfigNode.Load(file);
+                        //string shipname = craftFile.GetValue("ship");
+                        string shipname = Path.GetFileNameWithoutExtension(file);
+                        AHShipAntennas shipAntennas = GetAntennasFromCraftFile(craftFile);
+                        if (shipAntennas.RelayPower > 0)
                         {
-                            if (line.Contains("partModules = ModuleDataTransmitter"))
-                            {
-                                string fileName = Path.GetFileNameWithoutExtension(file);
-                                ShipFiles.Add(fileName);
-                                break; // no need to check further lines
-                            }
+                            shipFiles.Add(shipname, shipAntennas);
                         }
+                        
+                        // // Read text and look for line
+                        // string[] lines = File.ReadAllLines(file);
+                        // foreach (string line in lines)
+                        // {
+                        //     if (line.Contains("partModules = ModuleDataTransmitter"))
+                        //     {
+                        //         string fileName = Path.GetFileNameWithoutExtension(file);
+                        //         ShipFiles.Add(fileName);
+                        //         break; // no need to check further lines
+                        //     }
+                        // }
                     }
                     catch (Exception e)
                     {
@@ -62,12 +71,22 @@ namespace AntennaHelperNext
             {
                 Debug.LogError($"[AntennaHelper] Error scanning folder {folderPath}: {e.Message}");
             }
-            return ShipFiles;
+            return shipFiles;
         }
 
         private static AHShipAntennas GetAntennasFromCraftFile(ConfigNode craftFile)
         {
-            
+            AHShipAntennas shipAntennas = new AHShipAntennas();
+            ConfigNode[] partNodes = craftFile.GetNodes("PART");
+            foreach (ConfigNode partNode in partNodes)
+            {
+                string partName = partNode.GetValue("part").Split('_')[0];
+                AvailablePart ap = PartLoader.getPartInfoByName(partName);
+                Part prefab = ap.partPrefab;
+                shipAntennas.AddAntenna(prefab);
+            }
+            shipAntennas.UpdateAntennas();
+            return shipAntennas;
         }
         
         public static Dictionary<Vessel, AHShipAntennas> GetAllFlyingVessels()
@@ -91,7 +110,6 @@ namespace AntennaHelperNext
                     vesselDict.Add(vessel, shipAntennas);
                 }
             }
-            FlightShipList = vesselDict;
             return vesselDict;
         }
         
@@ -116,8 +134,46 @@ namespace AntennaHelperNext
                     vesselDict.Add(vessel, shipAntennas);
                 }
             }
-            FlightProtoShipList = vesselDict;
             return vesselDict;
+        }
+
+        public static void UpdateShipLists()
+        {
+            EditorShipListVAB.Clear();
+            EditorShipListSPH.Clear();
+            FlightShipList.Clear();
+            FlightProtoShipList.Clear();
+            
+            EditorShipListVAB = GetAllSavedShips(VABSavePath);
+            EditorShipListSPH = GetAllSavedShips(SPHSavePath);
+            FlightShipList = GetAllFlyingVessels();
+            FlightProtoShipList = GetAllFlyingProtoVessels();
+        }
+        
+        public static void GetAntennaPartList()
+        {
+            AntennaPartList.Clear();
+            foreach (AvailablePart aPart in PartLoader.LoadedPartsList)
+            {
+                Part prefab = aPart.partPrefab;
+                if (prefab != null && !aPart.name.StartsWith("kerbalEVA") )
+                {
+                    try
+                    {
+                        foreach (ModuleDataTransmitter antenna in prefab.FindModulesImplementing<ModuleDataTransmitter>())
+                        {
+                            if (antenna.antennaType == AntennaType.RELAY)
+                            {
+                                AntennaPartList.Add(prefab.partInfo.title, antenna);
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        Debug.LogWarning("[AH] Cannot load Antennas for part, skipping: " + aPart.name);
+                    }
+                }
+            }
         }        
     }
 }

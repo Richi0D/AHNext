@@ -7,7 +7,8 @@ namespace AntennaHelperNext
     {
         DSN,
         FLIGHT,
-        EDITOR,
+        EDITORVAB,
+        EDITORSPH,
         PART
     }
     

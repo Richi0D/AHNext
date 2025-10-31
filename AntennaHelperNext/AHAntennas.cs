@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -15,6 +16,8 @@ namespace AntennaHelperNext
         public ModuleDataTransmitter StrongestAntenna = null;
         public ModuleDataTransmitter StrongestRelayAntenna = null;
         public ModuleDataTransmitter StrongestDirectAntenna = null;
+        public ModuleDataTransmitter StrongestRelayAntennaNonCombinable = null;
+        public ModuleDataTransmitter StrongestDirectAntennaNonCombinable = null;        
         public double RelayPower = 0;
         public double DirectPower = 0;
         public double VesselPower = 0;
@@ -104,7 +107,8 @@ namespace AntennaHelperNext
         public void AddAntenna(ModuleDataTransmitter antenna)
         {
             Antennas.Add(antenna);
-        }
+        }       
+        
         public void AddAntenna(Part part)
         {
             foreach (ModuleDataTransmitter antenna in part.FindModulesImplementing<ModuleDataTransmitter>())
@@ -129,6 +133,12 @@ namespace AntennaHelperNext
                 }
             }
         }
+
+        public int countantennas(ModuleDataTransmitter antenna)
+        {
+            if (antenna is null) return 0;
+            return Antennas.Count(a => a == antenna);
+        }
         
         public void UpdateAntennas()
         {
@@ -140,6 +150,8 @@ namespace AntennaHelperNext
             StrongestAntenna = null;
             StrongestRelayAntenna = null;
             StrongestDirectAntenna = null;
+            StrongestRelayAntennaNonCombinable = null;
+            StrongestDirectAntennaNonCombinable = null;   
             VesselPower = 0;
             RelayPower = 0;
             DirectPower = 0;
@@ -150,7 +162,7 @@ namespace AntennaHelperNext
             foreach (ModuleDataTransmitter antenna in Antennas)
             {
                 SumAntennaPower += antenna.antennaPower;
-                if (StrongestAntenna == null || antenna.antennaPower > StrongestAntenna.antennaPower)
+                if (StrongestAntenna is null || antenna.antennaPower > StrongestAntenna.antennaPower)
                 {
                     StrongestAntenna = antenna;
                 }                
@@ -162,10 +174,15 @@ namespace AntennaHelperNext
                     {
                         DirectCombAntennas.Add(antenna);
                     }
-                    if (StrongestDirectAntenna == null || antenna.antennaPower > StrongestDirectAntenna.antennaPower)
+                    if (StrongestDirectAntenna is null || antenna.antennaPower > StrongestDirectAntenna.antennaPower)
                     {
                         StrongestDirectAntenna = antenna;
-                    }                    
+                    }
+                    if (!antenna.antennaCombinable && (StrongestDirectAntennaNonCombinable is null || 
+                        !antenna.antennaCombinable && antenna.antennaPower > StrongestDirectAntennaNonCombinable.antennaPower))
+                    {
+                        StrongestDirectAntennaNonCombinable = antenna;
+                    }                       
                 }
                 else if (antenna.antennaType == AntennaType.RELAY)
                 {
@@ -175,10 +192,15 @@ namespace AntennaHelperNext
                     {
                         RelayCombAntennas.Add(antenna);
                     }
-                    if (StrongestRelayAntenna == null || antenna.antennaPower > StrongestRelayAntenna.antennaPower)
+                    if (StrongestRelayAntenna is null || antenna.antennaPower > StrongestRelayAntenna.antennaPower)
                     {
                         StrongestRelayAntenna = antenna;
-                    }                    
+                    }   
+                    if (!antenna.antennaCombinable && (StrongestRelayAntennaNonCombinable is null || 
+                        antenna.antennaPower > StrongestRelayAntennaNonCombinable.antennaPower))
+                    {
+                        StrongestRelayAntennaNonCombinable = antenna;
+                    }                      
                 }
                 else
                 {
@@ -218,6 +240,5 @@ namespace AntennaHelperNext
             double maxVesselRange = AHUtil.GetMaxRange(VesselPower, targetPower);
             VesselRangesMax = AHUtil.GetDistancesBySignalFixed(maxVesselRange);
         }
-        
     }
 }

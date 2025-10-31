@@ -22,6 +22,7 @@ namespace AntennaHelperNext
 	    public static AHTargetType targetType = AHTargetType.DSN;
 	    // Vessel variables
 	    public static AHShipAntennas EditorShipAntennas = new AHShipAntennas();
+	    public static AHShipAntennas EditorAntennasPicker = new AHShipAntennas();
 	    
         // Start is called before the first frame update
         public void Start()
@@ -45,7 +46,9 @@ namespace AntennaHelperNext
             // fetch Antennas
             EditorShipAntennas.FetchAntennas(EditorLogic.fetch.ship.Parts, true);
             EditorShipAntennas.UpdateRanges(targetPower);
-            AHShipList.GetAllFlyingProtoVessels();
+            // get all flying and editor vessels
+            AHShipList.UpdateShipLists();
+            AHShipList.GetAntennaPartList();
 			
             // attach editor logic to each event
             GameEvents.onEditorLoad.Add (VesselLoad);
@@ -168,6 +171,7 @@ namespace AntennaHelperNext
         #region GUI
         // window positions
         private static readonly Vector2 defaultTargetSize = new Vector2 (400, 80);
+        private static readonly float targetWindowHeight = 200;
         public static readonly Dictionary<string, WindowInfo> EditorWindows = new Dictionary<string, WindowInfo>()
         {
 	        { "EditorMain", new WindowInfo(
@@ -193,13 +197,25 @@ namespace AntennaHelperNext
 			        saveKey:"editor_signal_strenght_per_planet_window_position"
 			        )
 	        },
-	        { "EditorTargetShipEditor", new WindowInfo(
+	        { "EditorTargetShipEditorVAB", new WindowInfo(
 			        415014,
 			        new Rect (new Vector2 (
 					        AntennaHelperSettings.WindowPositions["editor_target_window_position"].x, 
 					        AntennaHelperSettings.WindowPositions["editor_target_window_position"].y + defaultTargetSize.y)
-				        , new Vector2 (defaultTargetSize.x, 150)),
-			        AHEditorWindows.TargetWindowShipEditor,
+				        , new Vector2 (defaultTargetSize.x, targetWindowHeight)),
+			        AHEditorWindows.TargetWindowShipEditorVAB,
+			        Localizer.Format ("#autoLOC_AH_0017"),
+			        childWindow: "EditorTarget",
+			        minHeight: defaultTargetSize.y
+		        )
+	        },
+	        { "EditorTargetShipEditorSPH", new WindowInfo(
+			        415015,
+			        new Rect (new Vector2 (
+					        AntennaHelperSettings.WindowPositions["editor_target_window_position"].x, 
+					        AntennaHelperSettings.WindowPositions["editor_target_window_position"].y + defaultTargetSize.y)
+				        , new Vector2 (defaultTargetSize.x, targetWindowHeight)),
+			        AHEditorWindows.TargetWindowShipEditorSPH,
 			        Localizer.Format ("#autoLOC_AH_0017"),
 			        childWindow: "EditorTarget",
 			        minHeight: defaultTargetSize.y
@@ -210,7 +226,7 @@ namespace AntennaHelperNext
 			        new Rect (new Vector2 (
 					        AntennaHelperSettings.WindowPositions["editor_target_window_position"].x, 
 					        AntennaHelperSettings.WindowPositions["editor_target_window_position"].y + defaultTargetSize.y)
-				        , new Vector2 (defaultTargetSize.x, 150)),
+				        , new Vector2 (defaultTargetSize.x, targetWindowHeight)),
 			        AHEditorWindows.TargetWindowShipFlight,
 			        Localizer.Format ("#autoLOC_AH_0016"),
 			        childWindow: "EditorTarget",
@@ -222,7 +238,7 @@ namespace AntennaHelperNext
 			        new Rect (new Vector2 (
 					        AntennaHelperSettings.WindowPositions["editor_target_window_position"].x, 
 					        AntennaHelperSettings.WindowPositions["editor_target_window_position"].y + defaultTargetSize.y)
-				        , new Vector2 (defaultTargetSize.x, 150)),
+				        , new Vector2 (defaultTargetSize.x, targetWindowHeight)),
 			        AHEditorWindows.TargetWindowPart,
 			        Localizer.Format ("#autoLOC_AH_0031"),
 			        childWindow: "EditorTarget",
@@ -245,7 +261,8 @@ namespace AntennaHelperNext
 		        if (name == "EditorTarget")
 		        {
 			        // close children windows
-			        CloseWindow("EditorTargetShipEditor");
+			        CloseWindow("EditorTargetShipEditorVAB");
+			        CloseWindow("EditorTargetShipEditorSPH");
 			        CloseWindow("EditorTargetShipFlight");
 			        CloseWindow("EditorTargetPart");
 		        }
@@ -284,7 +301,6 @@ namespace AntennaHelperNext
 					win.Position.position = ExtendWindowPos(childWin.Position);
 				}
 				
-
 				GUILayout.BeginArea(win.Position);
 				win.Position = GUILayout.Window(
 					win.ID,          // You can assign a unique int per window in EditorWindowInfo
