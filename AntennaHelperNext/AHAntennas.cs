@@ -213,6 +213,10 @@ namespace AntennaHelperNext
                         StrongestRelayAntennaNonCombinable = antenna;
                     }                      
                 }
+                else if (antenna.antennaType == AntennaType.INTERNAL)
+                {
+                    // nothing to do here
+                }
                 else
                 {
                     Debug.Log(antenna.part.partInfo.title + " has an unknown antenna type: " + antenna.antennaType);

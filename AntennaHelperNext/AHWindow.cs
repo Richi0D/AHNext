@@ -85,7 +85,7 @@ namespace AntennaHelperNext
                 if (originalWindow.position.x - childWindow.width * 2 < 0) {
                     xPos = originalWindow.position.x + childWindow.width;
                 } else {
-                    xPos = originalWindow.position.x - childWindow.height;
+                    xPos = originalWindow.position.x - childWindow.width;
                 }
                 return new Vector2 (xPos, originalWindow.position.y);                
             }

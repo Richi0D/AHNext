@@ -12,8 +12,6 @@ namespace AntennaHelperNext
     public class AntennaHelperEditor : MonoBehaviour
     {
 	    
-	    private static AntennaHelperEditor instance;
-	    
 	    // Editor variables for GUI
 	    public static float trackingStationLevel;
 	    // Target variables

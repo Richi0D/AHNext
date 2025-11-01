@@ -84,10 +84,23 @@ namespace AntennaHelperNext
 			if (target != null && target.type == MapObject.ObjectType.Vessel)
 			{
 				activeVessel = target.vessel;
-				Debug.Log("Active part count: " + activeVessel.protoVessel.protoPartSnapshots.Count);
+				ActiveShipAntennas = new AHShipAntennas(); // create new instance, otherwise we overwrite another one.
 				ActiveShipAntennas.FetchAntennas(activeVessel.protoVessel.protoPartSnapshots, false);
-				Debug.Log("Active vessel: " + activeVessel.vesselName);
-				Debug.Log("Active power: " + ActiveShipAntennas.RelayPower);
+				selectedShipType = AHTargetType.FLIGHT;
+				
+				// Guid vid = activeVessel.protoVessel.vesselID;
+				// Debug.Log("Active Vessel: " + activeVessel.protoVessel.vesselID);
+				// foreach (ProtoVessel vessel in AHShipList.FlightProtoShipList.Keys)
+				// {
+				// 	if (vessel.vesselID == vid)
+				// 	{
+				// 		Debug.Log("Found Vessel in Flight ProtoShipList");
+				// 	}
+				// 	else
+				// 	{
+				// 		Debug.Log("[AH] Vessel not found in Flight ProtoShipList");
+				// 	}
+				// }
 			}
 			else
 			{
