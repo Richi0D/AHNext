@@ -126,8 +126,7 @@ namespace AntennaHelperNext
 			{ "flight_map_view_window_position", new Vector2(Screen.width / 2f + 300f, Screen.height / 2f) },
 
 			// Tracking Station
-			{ "tracking_station_main_window_position", new Vector2(Screen.width - 150f, Screen.height - 285f) },
-			{ "tracking_station_ship_window_position", new Vector2(Screen.width - 500f, Screen.height - 285f) }
+			{ "tracking_station_main_window_position", new Vector2(Screen.width - 500f, Screen.height - 500f) }
 		};
 		public static readonly Dictionary<string, Vector2> WindowPositions = new Dictionary<string, Vector2>(defaultPositions);
 		

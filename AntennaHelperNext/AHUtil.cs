@@ -12,6 +12,14 @@ namespace AntennaHelperNext
         PART
     }
     
+    public enum AHDisplayType
+    {
+        ACTIVE,
+        DSN,
+        RELAY,
+        DSNRELAY,
+    }    
+    
     public static class AHUtil
     {
         public static double TruePower (double power) {
@@ -34,7 +42,7 @@ namespace AntennaHelperNext
         public static double GetSignalStrength (double normalizedRange)
         {
             // return signal Strength in %
-            return ((3-2*normalizedRange) * (normalizedRange*normalizedRange))*100;
+            return ((3-2*normalizedRange) * (normalizedRange*normalizedRange));
         }  
         
         public static double GetAWCE (List<ModuleDataTransmitter> antennas)
@@ -144,7 +152,23 @@ namespace AntennaHelperNext
 
             // Fallback return if not converged
             return m * 0.5 * (a + b);
-        }        
+        }       
         
+        // simplify Antenna Values and ranges
+        public static string ToKMG(double value, bool useMetricSuffix = false, int decimalPlaces = 0)
+        {
+            string[] suffixes = useMetricSuffix ? new string[] { "km", "Mm", "Gm" } : new string[] { "k", "M", "G" };
+
+            double absValue = Math.Abs(value);
+
+            if (absValue >= 1_000_000_000f)
+                return (value / 1_000_000_000f).ToString($"F{decimalPlaces}") + suffixes[2]; // G / Gm
+            else if (absValue >= 1_000_000f)
+                return (value / 1_000_000f).ToString($"F{decimalPlaces}") + suffixes[1];     // M / Mm
+            else if (absValue >= 1_000f)
+                return (value / 1_000f).ToString($"F{decimalPlaces}") + suffixes[0];         // k / km
+            else
+                return value.ToString($"F{decimalPlaces}");                                   // no suffix
+        }        
     }
 }

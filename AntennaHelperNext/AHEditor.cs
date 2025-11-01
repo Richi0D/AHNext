@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEngine;
 using KSP.Localization;
 using ToolbarControl_NS;
-using UnityEngine.UIElements;
+using ClickThroughFix;
 
 namespace AntennaHelperNext
 {
@@ -23,6 +23,7 @@ namespace AntennaHelperNext
 	    // Vessel variables
 	    public static AHShipAntennas EditorShipAntennas = new AHShipAntennas();
 	    public static AHShipAntennas EditorAntennasPicker = new AHShipAntennas();
+	    public static (double customDistance, double customVesselSignal, double customRelaySignal) EditorCustomRange = (0, 0, 0);
 	    
         // Start is called before the first frame update
         public void Start()
@@ -43,12 +44,15 @@ namespace AntennaHelperNext
             GameEvents.onGUIApplicationLauncherReady.Add (AddToolbarButton);
             GameEvents.onGUIApplicationLauncherDestroyed.Add (RemoveToolbarButton);
             
-            // fetch Antennas
-            EditorShipAntennas.FetchAntennas(EditorLogic.fetch.ship.Parts, true);
-            EditorShipAntennas.UpdateRanges(targetPower);
             // get all flying and editor vessels
             AHShipList.UpdateShipLists();
             AHShipList.GetAntennaPartList();
+            // get all planets
+            AHPlanetList.LoadPlanetList();            
+            
+            // fetch Antennas
+            EditorShipAntennas.FetchAntennas(EditorLogic.fetch.ship.Parts, true);
+            EditorShipAntennas.UpdateRanges(targetPower);
 			
             // attach editor logic to each event
             GameEvents.onEditorLoad.Add (VesselLoad);
@@ -56,6 +60,8 @@ namespace AntennaHelperNext
             GameEvents.onEditorPodPicked.Add (PodPicked);
             GameEvents.onEditorPodDeleted.Add (PodDeleted);
             GameEvents.onEditorUndo.Add (EditorUndo);
+            
+            GameEvents.onGameSceneSwitchRequested.Add (QuitEditor);
         }
         
         // onDestroy is called when the instance is being destroyed
@@ -73,6 +79,7 @@ namespace AntennaHelperNext
             GameEvents.onEditorPodDeleted.Remove (PodDeleted);
             GameEvents.onEditorUndo.Remove (EditorUndo);
             
+            GameEvents.onGameSceneSwitchRequested.Remove (QuitEditor);
             // save positions and at last destroy the instance
 			AntennaHelperSettings.Save();
             Destroy(this);
@@ -81,20 +88,13 @@ namespace AntennaHelperNext
         // Update is called once per frame
         public void Update ()
         {
-            // Control locks to avoid controls in the editor when Mouse is over one of the windows
-            bool mouseOverWindow = EditorWindows.Values.Any(w => w.IsVisible && w.Position.Contains(Mouse.screenPos));
-
-            const string lockID = "AntennaHelper_inputLock";
-            const ControlTypes lockType = ControlTypes.UI | ControlTypes.EDITOR_PAD_PICK_PLACE | ControlTypes.CAMERACONTROLS;
-
-            if (mouseOverWindow)
-            {
-	            InputLockManager.SetControlLock(lockType, lockID);
-            }
-            else
-            {
-	            InputLockManager.RemoveControlLock(lockID);
-            }
+        }
+        
+        public void QuitEditor (GameEvents.FromToAction<GameScenes, GameScenes> eData)
+        {
+	        AntennaHelperSettings.Save();
+	        foreach (var win in EditorWindows.Keys)
+		        WindowInfo.CloseWindow(win, EditorWindows);
         }
         
         public void VesselLoad (ShipConstruct ship, KSP.UI.Screens.CraftBrowserDialog.LoadType screenType)
@@ -118,6 +118,7 @@ namespace AntennaHelperNext
         {
 	        EditorShipAntennas.FetchAntennas(EditorLogic.fetch.ship.Parts, true);
 	        EditorShipAntennas.UpdateRanges(targetPower);
+	        UpdateCustomRange(EditorCustomRange.customDistance);
         }
         
         public void PartEvent (ConstructionEventType eventType, Part part)
@@ -166,7 +167,18 @@ namespace AntennaHelperNext
 	        }
 	        EditorShipAntennas.UpdateAntennas();
 	        EditorShipAntennas.UpdateRanges(targetPower);
+	        UpdateCustomRange(EditorCustomRange.customDistance);
         }
+
+        public static void UpdateCustomRange(double range)
+        {
+	        double maxVesselRange = AHUtil.GetMaxRange(EditorShipAntennas.VesselPower, targetPower);
+	        double maxRelayRange = AHUtil.GetMaxRange(EditorShipAntennas.RelayPower, targetPower);
+	        double VesselSignal = AHUtil.GetSignalStrength(AHUtil.GetNormalizedRange(range, maxVesselRange));
+	        double RelaySignal = AHUtil.GetSignalStrength(AHUtil.GetNormalizedRange(range, maxRelayRange));
+	        EditorCustomRange = (range, VesselSignal, RelaySignal);
+        }
+        
         
         #region GUI
         // window positions
@@ -186,7 +198,8 @@ namespace AntennaHelperNext
 			        new Rect(AntennaHelperSettings.WindowPositions["editor_target_window_position"], defaultTargetSize),
 			        AHEditorWindows.TargetWindow,
 			        Localizer.Format ("#autoLOC_AH_0007"),
-			        saveKey:"editor_target_window_position"
+			        saveKey:"editor_target_window_position",
+			        parentWindow: "EditorMain"
 			        )
 	        },
 	        { "EditorPlanet", new WindowInfo(
@@ -194,7 +207,8 @@ namespace AntennaHelperNext
 			        new Rect(AntennaHelperSettings.WindowPositions["editor_signal_strenght_per_planet_window_position"], new Vector2(450, 240)),
 			        AHEditorWindows.PlanetWindow,
 			        Localizer.Format ("#autoLOC_AH_0060") + " / " + Localizer.Format ("#autoLOC_AH_0059"),
-			        saveKey:"editor_signal_strenght_per_planet_window_position"
+			        saveKey:"editor_signal_strenght_per_planet_window_position",
+			        parentWindow: "EditorMain"
 			        )
 	        },
 	        { "EditorTargetShipEditorVAB", new WindowInfo(
@@ -205,8 +219,9 @@ namespace AntennaHelperNext
 				        , new Vector2 (defaultTargetSize.x, targetWindowHeight)),
 			        AHEditorWindows.TargetWindowShipEditorVAB,
 			        Localizer.Format ("#autoLOC_AH_0017"),
-			        childWindow: "EditorTarget",
-			        minHeight: defaultTargetSize.y
+			        parentWindow: "EditorTarget",
+			        minHeight: defaultTargetSize.y,
+			        lockDragToParent: true
 		        )
 	        },
 	        { "EditorTargetShipEditorSPH", new WindowInfo(
@@ -217,8 +232,9 @@ namespace AntennaHelperNext
 				        , new Vector2 (defaultTargetSize.x, targetWindowHeight)),
 			        AHEditorWindows.TargetWindowShipEditorSPH,
 			        Localizer.Format ("#autoLOC_AH_0017"),
-			        childWindow: "EditorTarget",
-			        minHeight: defaultTargetSize.y
+			        parentWindow: "EditorTarget",
+			        minHeight: defaultTargetSize.y,
+			        lockDragToParent: true
 		        )
 	        },
 	        { "EditorTargetShipFlight", new WindowInfo(
@@ -229,8 +245,9 @@ namespace AntennaHelperNext
 				        , new Vector2 (defaultTargetSize.x, targetWindowHeight)),
 			        AHEditorWindows.TargetWindowShipFlight,
 			        Localizer.Format ("#autoLOC_AH_0016"),
-			        childWindow: "EditorTarget",
-			        minHeight: defaultTargetSize.y
+			        parentWindow: "EditorTarget",
+			        minHeight: defaultTargetSize.y,
+			        lockDragToParent: true
 			        )
 	        },
 	        { "EditorTargetPart", new WindowInfo(
@@ -241,76 +258,16 @@ namespace AntennaHelperNext
 				        , new Vector2 (defaultTargetSize.x, targetWindowHeight)),
 			        AHEditorWindows.TargetWindowPart,
 			        Localizer.Format ("#autoLOC_AH_0031"),
-			        childWindow: "EditorTarget",
-			        minHeight: defaultTargetSize.y
+			        parentWindow: "EditorTarget",
+			        minHeight: defaultTargetSize.y,
+					lockDragToParent: true
 			        )
 	        }
         };
         
-        public static void ShowWindow(string name) =>
-	        EditorWindows[name].IsVisible = true;
-        
-        public static void CloseWindow(string name)
-        {
-	        if (EditorWindows.TryGetValue(name, out var win))
-	        {
-		        if (!string.IsNullOrEmpty(win.SaveKey))
-			        AntennaHelperSettings.SavePosition(win.SaveKey, win.Position.position);
-		        win.IsVisible = false;
-
-		        if (name == "EditorTarget")
-		        {
-			        // close children windows
-			        CloseWindow("EditorTargetShipEditorVAB");
-			        CloseWindow("EditorTargetShipEditorSPH");
-			        CloseWindow("EditorTargetShipFlight");
-			        CloseWindow("EditorTargetPart");
-		        }
-	        }
-        }
-
-		private Vector2 ExtendWindowPos (Rect originalWindow)
-		{
-			float yPos;
-			if (originalWindow.position.y + originalWindow.height * 2 > Screen.height) {
-				yPos = originalWindow.position.y - originalWindow.height;
-			} else {
-				yPos = originalWindow.position.y + originalWindow.height;
-			}
-			return new Vector2 (originalWindow.position.x, yPos);
-		}
-
 		public void OnGUI ()
 		{
-			// set Skin
-			if (!HighLogic.CurrentGame.Parameters.CustomParams<AntennaHelperGameSettings>().altSkin)
-				GUI.skin = HighLogic.Skin;
-
-			// if visible show windows
-			foreach (var kv in EditorWindows)
-			{
-				var win = kv.Value;
-				
-				// skip windows that are not visible
-				if (!win.IsVisible) 
-					continue;
-				
-				// adjust position relative to child window
-				if (win.ChildWindow != null && EditorWindows.TryGetValue(win.ChildWindow, out var childWin))
-				{
-					win.Position.position = ExtendWindowPos(childWin.Position);
-				}
-				
-				GUILayout.BeginArea(win.Position);
-				win.Position = GUILayout.Window(
-					win.ID,          // You can assign a unique int per window in EditorWindowInfo
-					win.Position,
-					win.DrawFunction,
-					win.Title,
-					GUILayout.MinHeight (win.MinHeight)
-				);
-				GUILayout.EndArea();
-			}			
+			WindowInfo.onGuiWindow(EditorWindows);
 		}
 		#endregion
         
@@ -334,13 +291,12 @@ namespace AntennaHelperNext
                 "AntennaHelperNext/Textures/icon_dish_on_small",
                 "AntennaHelperNext/Textures/icon_dish_off_small",
                 Localizer.Format (MODNAME));
-
         }
 
         private void RemoveToolbarButton ()
         {
 	        foreach (var win in EditorWindows.Keys)
-		        CloseWindow(win);
+		        WindowInfo.CloseWindow(win, EditorWindows);
 
             if (toolbarControl != null) {
                 toolbarControl.OnDestroy ();
@@ -348,15 +304,15 @@ namespace AntennaHelperNext
             }
         }
 
-        private void ToolbarButtonOnTrue ()
+        private void ToolbarButtonOnTrue()
         {
-	        ShowWindow("EditorMain");
+	        WindowInfo.ShowWindow("EditorMain", EditorWindows);
         }
 
-        private void ToolbarButtonOnFalse ()
+        public void ToolbarButtonOnFalse()
         {
 	        foreach (var win in EditorWindows.Keys)
-		        CloseWindow(win);
+		        WindowInfo.CloseWindow(win, EditorWindows);
         }
         #endregion
     }

@@ -41,6 +41,8 @@
         <Compile Include="AHPlanetList.cs" />
         <Compile Include="AHSettings.cs" />
         <Compile Include="AHShipList.cs" />
+        <Compile Include="AHTrackingStation.cs" />
+        <Compile Include="AHTrackingStationWindows.cs" />
         <Compile Include="AHUIStyling.cs" />
         <Compile Include="AHUtil.cs" />
         <Compile Include="AHWindow.cs" />

@@ -37,6 +37,17 @@ namespace AntennaHelperNext
             {75, 0 },
             {100, 0 } // is 99.5%%
         };
+        public Dictionary<string, (double minVesselSignal, double maxVesselSignal, double minRelaySignal, double maxRelaySignal)> PlanetSignalStrengths =
+            new Dictionary<string, (double minVesselSignal, double maxVesselSignal, double minRelaySignal, double maxRelaySignal)>();
+
+        public AHShipAntennas()
+        {
+            foreach (var planet in AHPlanetList.PlanetList)
+            {
+                string planetName = planet.Key.bodyName;
+                PlanetSignalStrengths.Add(planetName, (0, 0, 0, 0));
+            }
+        }
         
         public void FetchAntennas(List<Part> parts, bool includeNotExtended = false)
         {
@@ -239,6 +250,21 @@ namespace AntennaHelperNext
             RelayRangesMax = AHUtil.GetDistancesBySignalFixed(maxRelayRange);
             double maxVesselRange = AHUtil.GetMaxRange(VesselPower, targetPower);
             VesselRangesMax = AHUtil.GetDistancesBySignalFixed(maxVesselRange);
+            
+            // update ranges for planets
+            foreach (var planet in AHPlanetList.PlanetList)
+            {
+                string planetName = planet.Key.bodyName;
+                double minDistance = planet.Value.minDistance;
+                double maxDistance = planet.Value.maxDistance;
+
+                double minVesselSignal = AHUtil.GetSignalStrength(AHUtil.GetNormalizedRange(minDistance, maxVesselRange));
+                double maxVesselSignal = AHUtil.GetSignalStrength(AHUtil.GetNormalizedRange(maxDistance, maxVesselRange));
+                double minRelaySignal = AHUtil.GetSignalStrength(AHUtil.GetNormalizedRange(minDistance, maxRelayRange));
+                double maxRelaySignal = AHUtil.GetSignalStrength(AHUtil.GetNormalizedRange(maxDistance, maxRelayRange));
+
+                PlanetSignalStrengths[planetName] = (minVesselSignal, maxVesselSignal, minRelaySignal, maxRelaySignal);
+            }
         }
     }
 }
