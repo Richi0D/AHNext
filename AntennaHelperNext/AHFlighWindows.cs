@@ -65,9 +65,10 @@ namespace AntennaHelperNext
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(/*Antennas extended*/Localizer.Format("#autoLOC_AH_0109") + " : ",
                     AHUIStyling.DefaultLabel, GUILayout.Width(widthFirstCol));
+                int antennacount = AHFlight.ActiveShipAntennas.AntennasNotExtended.Count + AHFlight.ActiveShipAntennas.VesselAntennas.Count;
                 GUILayout.Label(/*count*/Localizer.Format("#autoLOC_AH_0110", new string[] {
-                        (AHFlight.ActiveShipAntennas.VesselAntennas.Count - AHFlight.ActiveShipAntennas.AntennasNotExtended.Count).ToString(),
-                        (AHFlight.ActiveShipAntennas.AntennasNotExtended.Count + AHFlight.ActiveShipAntennas.VesselAntennas.Count).ToString()
+                        (antennacount - AHFlight.ActiveShipAntennas.AntennasNotExtended.Count).ToString(),
+                        (antennacount).ToString()
                     }),
                     AHUIStyling.DefaultLabel);
                 GUILayout.EndHorizontal();                
@@ -148,11 +149,23 @@ namespace AntennaHelperNext
             double distancetoHome = Vector3d.Distance (AHFlight.activeVessel.GetWorldPos3D(), home.position) - home.Radius;
             GUILayout.Label (AHUtil.GetSignalStrength(AHUtil.GetNormalizedRange(distancetoHome, VesselmaxRange)).ToString());
             
+            GUILayout.Label ("Distance to DSN");
+            GUILayout.Label (distancetoHome.ToString());
+            
             GUILayout.Label ("MaxRangeVessel");
             GUILayout.Label (VesselmaxRange.ToString());
             
             GUILayout.Label ("MaxRangeRelay");
             GUILayout.Label (RelaymaxRange.ToString());
+            
+            GUILayout.Label ("Antennas not Extendet");
+            GUILayout.Label (AHFlight.ActiveShipAntennas.AntennasNotExtended.Count.ToString());
+            
+            GUILayout.Label ("Antennas count");
+            GUILayout.Label (AHFlight.ActiveShipAntennas.VesselAntennas.Count.ToString());
+            
+            GUILayout.Label ("on Flight vessels");
+            GUILayout.Label (AHShipList.FlightShipList.Count.ToString());
             
             GUILayout.EndVertical();
             GUI.DragWindow();

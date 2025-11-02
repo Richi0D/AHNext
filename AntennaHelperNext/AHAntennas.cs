@@ -75,45 +75,50 @@ namespace AntennaHelperNext
             foreach (ProtoPartSnapshot protPart in protParts)
             {
                 Part part = protPart.partPrefab;
-                // skip not extended antennas
-                if (!includeNotExtended)
-                {
-                    if (part.HasModuleImplementing<ModuleDeployableAntenna>()) {
-                        ModuleDeployableAntenna antDep = part.FindModuleImplementing<ModuleDeployableAntenna> ();
-                        if ((antDep.deployState != ModuleDeployablePart.DeployState.EXTENDED) 
-                            && (antDep.deployState != ModuleDeployablePart.DeployState.EXTENDING)) {
-                            AntennasNotExtended.Add(part);
-                            continue;
-                        }
-                    }
-                }
-                AddAntenna(part);                
                 // // skip not extended antennas
-                // bool skipPart = false;
                 // if (!includeNotExtended)
                 // {
-                //     // find deploy state of part
-                //     foreach (ProtoPartModuleSnapshot protoModule in protPart.modules)
-                //     {
-                //         if (protoModule.moduleName == "ModuleDeployableAntenna")
-                //         {
-                //             ConfigNode moduleValues = protoModule.moduleValues;
-                //             if (moduleValues.HasValue("deployState"))
-                //             {
-                //                 // RETRACTED, EXTENDED, RETRACTING, EXTENDING or BROKEN
-                //                 string deployState = moduleValues.GetValue("deployState");
-                //                 if (deployState == "RETRACTED" && deployState == "RETRACTING")
-                //                 {
-                //                     AntennasNotExtended.Add(part);
-                //                     skipPart = true;
-                //                     break;
-                //                 }
-                //             }
+                //     if (part.HasModuleImplementing<ModuleDeployableAntenna>()) {
+                //         ModuleDeployableAntenna antDep = part.FindModuleImplementing<ModuleDeployableAntenna> ();
+                //         Debug.Log("Antenna DEploy state:  " + antDep.deployState);
+                //         if ((antDep.deployState != ModuleDeployablePart.DeployState.EXTENDED) 
+                //             && (antDep.deployState != ModuleDeployablePart.DeployState.EXTENDING)) {
+                //             Debug.Log("Skip Antenna:  " + part.partInfo.title);
+                //             AntennasNotExtended.Add(part);
+                //             continue;
                 //         }
                 //     }
                 // }
-                // if (skipPart) continue; // skip not extended antennas
-                // AddAntenna(part);
+                // AddAntenna(part);   
+                
+                // IMPORTANT: DO USE THIS METHOD INSTEAD OF THE ABOVE ONE. Above method does not get the status of the antennas properly
+                // skip not extended antennas
+                bool skipPart = false;
+                if (!includeNotExtended)
+                {
+                    // find deploy state of part
+                    foreach (ProtoPartModuleSnapshot protoModule in protPart.modules)
+                    {
+                        if (protoModule.moduleName == "ModuleDeployableAntenna")
+                        {
+                            ConfigNode moduleValues = protoModule.moduleValues;
+                            if (moduleValues.HasValue("deployState"))
+                            {
+                                // RETRACTED, EXTENDED, RETRACTING, EXTENDING or BROKEN
+                                string deployState = moduleValues.GetValue("deployState");
+                                if (deployState != "EXTENDED" && deployState != "EXTENDING")
+                                {
+                                    AntennasNotExtended.Add(part);
+                                    skipPart = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                if (skipPart) continue; // skip not extended antennas
+                AddAntenna(part);
             }
             UpdateAntennas();
         }        
@@ -300,5 +305,7 @@ namespace AntennaHelperNext
                 PlanetSignalStrengths[planetName] = (minVesselSignal, maxVesselSignal, minRelaySignal, maxRelaySignal);
             }
         }
+        
+        
     }
 }

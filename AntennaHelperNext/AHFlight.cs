@@ -55,7 +55,7 @@ namespace AntennaHelperNext
 			ActiveShipAntennas.UpdateRanges(DSNPower);			
 			
 			GameEvents.onVesselWasModified.Add (VesselModified);
-			GameEvents.onVesselSwitching.Add (VesselSwitch);
+			GameEvents.onVesselChange.Add (VesselSwitch);
 			GameEvents.onVesselDestroy.Add (VesselDestroy);
 
 			GameEvents.OnMapEntered.Add(EnteringMap);
@@ -72,7 +72,7 @@ namespace AntennaHelperNext
 			RemoveToolbarButton();
 			
 			GameEvents.onVesselWasModified.Remove (VesselModified);
-			GameEvents.onVesselSwitching.Remove (VesselSwitch);
+			GameEvents.onVesselChange.Remove (VesselSwitch);
 			GameEvents.onVesselDestroy.Remove (VesselDestroy);
 
 			GameEvents.OnMapEntered.Remove(EnteringMap);
@@ -86,7 +86,10 @@ namespace AntennaHelperNext
 		
 		public void Update ()
 		{
-			
+			if (FlightWindows["FlightMain"].IsVisible)
+			{
+				AntennaStateWatcher();
+			}
 		}
 		
 		private void EnteringMap ()
@@ -112,7 +115,7 @@ namespace AntennaHelperNext
 			GetActiveVessel();
 		}
 		
-		private void VesselSwitch (Vessel fromVessel, Vessel toVessel)
+		private void VesselSwitch (Vessel v)
 		{
 			GetActiveVessel();
 		}		
@@ -139,6 +142,31 @@ namespace AntennaHelperNext
 			AntennaHelperSettings.Save();
 			foreach (var win in FlightWindows.Keys)
 				WindowInfo.CloseWindow(win, FlightWindows);
+		}		
+		
+		
+		// watch for antenna state changes and update the list of antennas
+		private readonly Dictionary<ModuleDeployableAntenna, ModuleDeployablePart.DeployState> lastStates =
+			new Dictionary<ModuleDeployableAntenna, ModuleDeployablePart.DeployState>();
+		public void AntennaStateWatcher()
+		{
+			if (activeVessel == null) return;
+			foreach (var antenna in activeVessel.FindPartModulesImplementing<ModuleDeployableAntenna>())
+			{
+				var currentState = antenna.deployState;
+				if (!lastStates.TryGetValue(antenna, out var prevState))
+				{
+					lastStates[antenna] = currentState;
+					continue;
+				}
+
+				if (prevState != currentState)
+				{
+					lastStates[antenna] = currentState;
+					// since we filter extended antennas on part level, we need to update the whole antenna list
+					ActiveShipAntennas.FetchAntennas(activeVessel.parts, false);
+				}
+			}
 		}		
 		
 		

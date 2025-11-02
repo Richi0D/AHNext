@@ -84,7 +84,6 @@ namespace AntennaHelperNext
 			
 		}
 		
-
 		public void GetActiveVessel()
 		{
 			var target = PlanetariumCamera.fetch?.target;

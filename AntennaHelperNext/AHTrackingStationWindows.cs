@@ -109,9 +109,10 @@ namespace AntennaHelperNext
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(/*Antennas extended*/Localizer.Format("#autoLOC_AH_0109") + " : ",
                     AHUIStyling.DefaultLabel, GUILayout.Width(widthFirstCol));
+                int antennacount = AHTrackingStation.ActiveShipAntennas.AntennasNotExtended.Count + AHTrackingStation.ActiveShipAntennas.VesselAntennas.Count;
                 GUILayout.Label(/*count*/Localizer.Format("#autoLOC_AH_0110", new string[] {
-                        (AHTrackingStation.ActiveShipAntennas.VesselAntennas.Count - AHTrackingStation.ActiveShipAntennas.AntennasNotExtended.Count).ToString(),
-                        (AHTrackingStation.ActiveShipAntennas.AntennasNotExtended.Count + AHTrackingStation.ActiveShipAntennas.VesselAntennas.Count).ToString()
+                        (antennacount - AHTrackingStation.ActiveShipAntennas.AntennasNotExtended.Count).ToString(),
+                        (antennacount).ToString()
                     }),
                     AHUIStyling.DefaultLabel);
                 GUILayout.EndHorizontal();                
@@ -178,8 +179,9 @@ namespace AntennaHelperNext
             }
             
             // DEBUG
-            GUILayout.Label ("SignalStrenght");
-            GUILayout.Label (AHTrackingStation.debugSignalStrength.ToString());
+            // GUILayout.Label ("SignalStrenght");
+            // GUILayout.Label (AHTrackingStation.debugSignalStrength.ToString());
+            
             
             // GUILayout.Label ("CommPath");
             // foreach (CommLink link in AHTrackingStation.debugCommPath)

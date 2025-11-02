@@ -148,7 +148,7 @@ namespace AntennaHelperNext
             
             EditorShipListVAB = GetAllSavedShips(VABSavePath);
             EditorShipListSPH = GetAllSavedShips(SPHSavePath);
-            //FlightShipList = GetAllFlyingVessels(); // we don't need this anymore'
+            // FlightShipList = GetAllFlyingVessels(); // this does not get part infos from unloaded vessels, we use the protovessels
             FlightProtoShipList = GetAllFlyingProtoVessels();
         }
         
