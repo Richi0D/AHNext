@@ -25,6 +25,7 @@ namespace AntennaHelperNext
 		public static float uiScale;
 		public static Texture2D separatorTex;
 		public static Color EditorbarColor;
+		public static Color SelectorColor;
 
 		void Start()
 		{
@@ -32,6 +33,7 @@ namespace AntennaHelperNext
 			// Load textures
 			signalPerDistanceTex = (Texture)GameDatabase.Instance.GetTexture ("AntennaHelperNext/Textures/signal_per_distance", false);
 			EditorbarColor = new Color(122f/255, 161f/255, 186f/255);
+			SelectorColor = new Color(46f/255, 219f/255, 107f/255);
 			// scaling parameter
 			uiScale = GameSettings.UI_SCALE;
 			// create texture for gui seperator
@@ -123,7 +125,6 @@ namespace AntennaHelperNext
 
 			// Flight
 			{ "flight_main_window_position", new Vector2(Screen.width / 2f, Screen.height / 2f) },
-			{ "flight_map_view_window_position", new Vector2(Screen.width / 2f + 300f, Screen.height / 2f) },
 
 			// Tracking Station
 			{ "tracking_station_main_window_position", new Vector2(Screen.width - 500f, Screen.height - 500f) }

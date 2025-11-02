@@ -41,7 +41,7 @@ namespace AntennaHelperNext
         }
         public static double GetSignalStrength (double normalizedRange)
         {
-            // return signal Strength in %
+            // return signal Strength
             return ((3-2*normalizedRange) * (normalizedRange*normalizedRange));
         }  
         

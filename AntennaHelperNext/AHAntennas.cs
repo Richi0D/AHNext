@@ -1,57 +1,53 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
+using CommNet;
 using UnityEngine;
 
 namespace AntennaHelperNext
 {
     public class AHShipAntennas
     {
-        public List<ModuleDataTransmitter> Antennas = new List<ModuleDataTransmitter>();
-        public List<ModuleDataTransmitter> DirectAntennas = new List<ModuleDataTransmitter>();
-        public List<ModuleDataTransmitter> DirectCombAntennas = new List<ModuleDataTransmitter>();
+        public List<ModuleDataTransmitter> VesselAntennas = new List<ModuleDataTransmitter>();
+        public List<ModuleDataTransmitter> VesselCombAntennas = new List<ModuleDataTransmitter>();
         public List<ModuleDataTransmitter> RelayAntennas = new List<ModuleDataTransmitter>();
         public List<ModuleDataTransmitter> RelayCombAntennas = new List<ModuleDataTransmitter>();
         public List<Part> AntennasNotExtended = new List<Part>();
-        public ModuleDataTransmitter StrongestAntenna = null;
+        public ModuleDataTransmitter StrongestVesselAntenna = null;
         public ModuleDataTransmitter StrongestRelayAntenna = null;
-        public ModuleDataTransmitter StrongestDirectAntenna = null;
+        public ModuleDataTransmitter StrongestVesselAntennaNonCombinable = null;    
         public ModuleDataTransmitter StrongestRelayAntennaNonCombinable = null;
-        public ModuleDataTransmitter StrongestDirectAntennaNonCombinable = null;        
-        public double RelayPower = 0;
-        public double DirectPower = 0;
         public double VesselPower = 0;
-        public Dictionary<double, double> RelayRangesMax = new Dictionary<double, double>
-        {
-            {0, 0 }, // is 0.5%
-            {25, 0 },
-            {50, 0 },
-            {75, 0 },
-            {100, 0 } // is 99.5%%
-        };
-        public Dictionary<double, double> VesselRangesMax = new Dictionary<double, double>
-        {
-            {0, 0 }, // is 0.5%
-            {25, 0 },
-            {50, 0 },
-            {75, 0 },
-            {100, 0 } // is 99.5%%
-        };
-        public Dictionary<string, (double minVesselSignal, double maxVesselSignal, double minRelaySignal, double maxRelaySignal)> PlanetSignalStrengths =
-            new Dictionary<string, (double minVesselSignal, double maxVesselSignal, double minRelaySignal, double maxRelaySignal)>();
+        public double RelayPower = 0;
+        public Dictionary<double, double> VesselRangesMax;
+        public Dictionary<double, double> RelayRangesMax;
+        public Dictionary<string, (double minVesselSignal, double maxVesselSignal, double minRelaySignal, double
+            maxRelaySignal)> PlanetSignalStrengths;
 
         public AHShipAntennas()
         {
+            // init planet signal strengths
+            PlanetSignalStrengths =
+                new Dictionary<string, (double minVesselSignal, double maxVesselSignal, double minRelaySignal, double maxRelaySignal)>();
             foreach (var planet in AHPlanetList.PlanetList)
             {
                 string planetName = planet.Key.bodyName;
                 PlanetSignalStrengths.Add(planetName, (0, 0, 0, 0));
             }
+            // init vessel ranges
+            RelayRangesMax = new Dictionary<double, double>();
+            VesselRangesMax = new Dictionary<double, double>();
+            foreach (var signal in AHUtil.SignalMultipliers)
+            {
+                double interval = signal.Key;
+                RelayRangesMax.Add(interval, 0);
+                VesselRangesMax.Add(interval, 0);
+            }
         }
         
         public void FetchAntennas(List<Part> parts, bool includeNotExtended = false)
         {
-            Antennas.Clear();
+            VesselAntennas.Clear();
             AntennasNotExtended.Clear();
             foreach (Part part in parts)
             {
@@ -74,73 +70,85 @@ namespace AntennaHelperNext
         
         public void FetchAntennas(List<ProtoPartSnapshot> protParts, bool includeNotExtended = false)
         {
-            Antennas.Clear();
+            VesselAntennas.Clear();
             AntennasNotExtended.Clear();
             foreach (ProtoPartSnapshot protPart in protParts)
             {
-                bool skipPart = false;
                 Part part = protPart.partPrefab;
-                
                 // skip not extended antennas
                 if (!includeNotExtended)
                 {
-                    // find deploy state of part
-                    foreach (ProtoPartModuleSnapshot protoModule in protPart.modules)
-                    {
-                        if (protoModule.moduleName == "ModuleDeployableAntenna")
-                        {
-                            ConfigNode moduleValues = protoModule.moduleValues;
-                            if (moduleValues.HasValue("deployState"))
-                            {
-                                // RETRACTED, EXTENDED, RETRACTING, EXTENDING or BROKEN
-                                string deployState = moduleValues.GetValue("deployState");
-                                if (deployState != "EXTENDED" && deployState != "EXTENDING")
-                                {
-                                    AntennasNotExtended.Add(part);
-                                    skipPart = true;
-                                    break;
-                                }
-                            }
+                    if (part.HasModuleImplementing<ModuleDeployableAntenna>()) {
+                        ModuleDeployableAntenna antDep = part.FindModuleImplementing<ModuleDeployableAntenna> ();
+                        if ((antDep.deployState != ModuleDeployablePart.DeployState.EXTENDED) 
+                            && (antDep.deployState != ModuleDeployablePart.DeployState.EXTENDING)) {
+                            AntennasNotExtended.Add(part);
+                            continue;
                         }
                     }
                 }
-                if (skipPart) continue; // skip not extended antennas
-                AddAntenna(part);
+                AddAntenna(part);                
+                // // skip not extended antennas
+                // bool skipPart = false;
+                // if (!includeNotExtended)
+                // {
+                //     // find deploy state of part
+                //     foreach (ProtoPartModuleSnapshot protoModule in protPart.modules)
+                //     {
+                //         if (protoModule.moduleName == "ModuleDeployableAntenna")
+                //         {
+                //             ConfigNode moduleValues = protoModule.moduleValues;
+                //             if (moduleValues.HasValue("deployState"))
+                //             {
+                //                 // RETRACTED, EXTENDED, RETRACTING, EXTENDING or BROKEN
+                //                 string deployState = moduleValues.GetValue("deployState");
+                //                 if (deployState == "RETRACTED" && deployState == "RETRACTING")
+                //                 {
+                //                     AntennasNotExtended.Add(part);
+                //                     skipPart = true;
+                //                     break;
+                //                 }
+                //             }
+                //         }
+                //     }
+                // }
+                // if (skipPart) continue; // skip not extended antennas
+                // AddAntenna(part);
             }
             UpdateAntennas();
         }        
         
         public void ClearAntennas()
         {
-            Antennas.Clear();
+            VesselAntennas.Clear();
         }
         
         public void AddAntenna(ModuleDataTransmitter antenna)
         {
-            Antennas.Add(antenna);
+            VesselAntennas.Add(antenna);
         }       
         
         public void AddAntenna(Part part)
         {
             foreach (ModuleDataTransmitter antenna in part.FindModulesImplementing<ModuleDataTransmitter>())
             {
-                Antennas.Add(antenna);
+                VesselAntennas.Add(antenna);
             }
         }
         public void RemoveAntenna(ModuleDataTransmitter antenna)
         {
-            if (Antennas.Contains(antenna))
+            if (VesselAntennas.Contains(antenna))
             {
-                Antennas.Remove(antenna);
+                VesselAntennas.Remove(antenna);
             }
         }
         public void RemoveAntenna(Part part)
         {
             foreach (ModuleDataTransmitter antenna in part.FindModulesImplementing<ModuleDataTransmitter>())
             {
-                if (Antennas.Contains(antenna))
+                if (VesselAntennas.Contains(antenna))
                 {
-                    Antennas.Remove(antenna);
+                    VesselAntennas.Remove(antenna);
                 }
             }
         }
@@ -148,104 +156,126 @@ namespace AntennaHelperNext
         public int countantennas(ModuleDataTransmitter antenna)
         {
             if (antenna is null) return 0;
-            return Antennas.Count(a => a == antenna);
+            return VesselAntennas.Count(a => a == antenna);
         }
         
         public void UpdateAntennas()
         {
             // reset everything
-            DirectAntennas.Clear();
-            DirectCombAntennas.Clear();
             RelayAntennas.Clear();
+            VesselCombAntennas.Clear();
             RelayCombAntennas.Clear();
-            StrongestAntenna = null;
+            StrongestVesselAntenna = null;
             StrongestRelayAntenna = null;
-            StrongestDirectAntenna = null;
+            StrongestVesselAntennaNonCombinable = null;   
             StrongestRelayAntennaNonCombinable = null;
-            StrongestDirectAntennaNonCombinable = null;   
             VesselPower = 0;
             RelayPower = 0;
-            DirectPower = 0;
             double SumAntennaPower = 0;
             double SumRelayAntennaPower = 0;
-            double SumDirectAntennaPower = 0;            
             
-            foreach (ModuleDataTransmitter antenna in Antennas)
+            // find the strongest antenna and the sum of all antennas
+            foreach (ModuleDataTransmitter antenna in VesselAntennas)
             {
-                SumAntennaPower += antenna.antennaPower;
-                if (StrongestAntenna is null || antenna.antennaPower > StrongestAntenna.antennaPower)
+                if (StrongestVesselAntenna is null || antenna.antennaPower > StrongestVesselAntenna.antennaPower)
                 {
-                    StrongestAntenna = antenna;
-                }                
-                if (antenna.antennaType == AntennaType.DIRECT)
-                {
-                    SumDirectAntennaPower += antenna.antennaPower;
-                    DirectAntennas.Add(antenna);
-                    if (antenna.antennaCombinable)
-                    {
-                        DirectCombAntennas.Add(antenna);
-                    }
-                    if (StrongestDirectAntenna is null || antenna.antennaPower > StrongestDirectAntenna.antennaPower)
-                    {
-                        StrongestDirectAntenna = antenna;
-                    }
-                    if (!antenna.antennaCombinable && (StrongestDirectAntennaNonCombinable is null || 
-                        !antenna.antennaCombinable && antenna.antennaPower > StrongestDirectAntennaNonCombinable.antennaPower))
-                    {
-                        StrongestDirectAntennaNonCombinable = antenna;
-                    }                       
+                    StrongestVesselAntenna = antenna;
                 }
-                else if (antenna.antennaType == AntennaType.RELAY)
+                if (antenna.antennaCombinable)
                 {
-                    SumRelayAntennaPower += antenna.antennaPower;
+                    VesselCombAntennas.Add(antenna);
+                    SumAntennaPower += antenna.antennaPower; // only add combinable antennas to the sum
+                }      
+                if (!antenna.antennaCombinable && (StrongestVesselAntennaNonCombinable is null || 
+                                                   antenna.antennaPower > StrongestVesselAntennaNonCombinable.antennaPower))
+                {
+                    StrongestVesselAntennaNonCombinable = antenna;
+                }              
+                
+                if (antenna.antennaType == AntennaType.RELAY)
+                {
                     RelayAntennas.Add(antenna);
-                    if (antenna.antennaCombinable)
-                    {
-                        RelayCombAntennas.Add(antenna);
-                    }
                     if (StrongestRelayAntenna is null || antenna.antennaPower > StrongestRelayAntenna.antennaPower)
                     {
                         StrongestRelayAntenna = antenna;
-                    }   
+                    }                      
+                    if (antenna.antennaCombinable)
+                    {
+                        RelayCombAntennas.Add(antenna);
+                        SumRelayAntennaPower += antenna.antennaPower; // only add combinable antennas to the sum
+                    }
                     if (!antenna.antennaCombinable && (StrongestRelayAntennaNonCombinable is null || 
                         antenna.antennaPower > StrongestRelayAntennaNonCombinable.antennaPower))
                     {
                         StrongestRelayAntennaNonCombinable = antenna;
                     }                      
                 }
-                else if (antenna.antennaType == AntennaType.INTERNAL)
+                // else if (antenna.antennaType == AntennaType.INTERNAL)
+                // {
+                //     // nothing to do here
+                // }
+                // else
+                // {
+                //     Debug.Log(antenna.part.partInfo.title + " has an unknown antenna type: " + antenna.antennaType);
+                // }
+            }
+            
+            // with all the data we can calculate the total antenna powers
+            if (VesselAntennas.Count == 0)
+            {
+                VesselPower = 0; // no antennas on Vessel
+            }
+            else if (VesselAntennas.Count == 1)
+            {
+                VesselPower = VesselAntennas[0].antennaPower; // only a single antenna on Vessel
+            }
+            else
+            {
+                // mutliple antennas on Vessel calculate the total power
+                if (VesselCombAntennas.Count > 0)
                 {
-                    // nothing to do here
+                    // only calculate if we have combinable antennas
+                    VesselPower = AHUtil.CalcVesselPower(StrongestVesselAntenna.antennaPower, SumAntennaPower, AHUtil.GetAWCE(VesselCombAntennas));
                 }
                 else
                 {
-                    Debug.Log(antenna.part.partInfo.title + " has an unknown antenna type: " + antenna.antennaType);
+                    // fallback to the strongest vessel antenna
+                    VesselPower = StrongestVesselAntenna.antennaPower;
+                }
+                
+                if (StrongestVesselAntennaNonCombinable != null && StrongestVesselAntennaNonCombinable.antennaPower > VesselPower)
+                {
+                    // there exists a stronger non-combinable antenna on Vessel
+                    VesselPower = StrongestVesselAntennaNonCombinable.antennaPower;
                 }
             }
-            // with all the data we can calculate the different antenna powers
-            if (StrongestAntenna != null)
+            // now we need the same for the relay antennas
+            if (RelayAntennas.Count == 0)
             {
-                VesselPower = AHUtil.CalcVesselPower(StrongestAntenna.antennaPower, SumAntennaPower, AHUtil.GetAWCE(Antennas));
+                RelayPower = 0; // no antennas on Vessel
+            }
+            else if (RelayAntennas.Count == 1)
+            {
+                RelayPower = RelayAntennas[0].antennaPower; // only a single antenna on Vessel
             }
             else
             {
-                VesselPower = 0;
-            }
-            if (StrongestRelayAntenna != null)
-            {
-                RelayPower = AHUtil.CalcVesselPower(StrongestRelayAntenna.antennaPower, SumRelayAntennaPower, AHUtil.GetAWCE(RelayAntennas));
-            }
-            else
-            {
-                RelayPower = 0;
-            }
-            if (StrongestDirectAntenna != null)
-            {
-                DirectPower = AHUtil.CalcVesselPower(StrongestDirectAntenna.antennaPower, SumDirectAntennaPower, AHUtil.GetAWCE(DirectAntennas));
-            }
-            else
-            {
-                DirectPower = 0;
+                // mutliple antennas on Vessel calculate the total power
+                if (RelayCombAntennas.Count > 0)
+                {
+                    // only calculate if we have combinable antennas
+                    RelayPower = AHUtil.CalcVesselPower(StrongestRelayAntenna.antennaPower, SumRelayAntennaPower, AHUtil.GetAWCE(RelayCombAntennas));
+                }
+                else
+                {
+                    // fallback to the strongest relay antenna
+                    RelayPower = StrongestRelayAntenna.antennaPower;
+                }                
+                if (StrongestRelayAntennaNonCombinable != null && StrongestRelayAntennaNonCombinable.antennaPower > RelayPower)
+                {
+                    // there exists a stronger non-combinable antenna on Vessel
+                    RelayPower = StrongestRelayAntennaNonCombinable.antennaPower;
+                }
             }
         }
         public void UpdateRanges(double targetPower)

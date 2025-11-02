@@ -16,6 +16,7 @@ namespace AntennaHelperNext
         public static readonly GUIStyle ButtonBold;
         public static readonly GUIStyle ButtonRed;
         public static readonly GUIStyle ButtonGreen;
+        public static readonly GUIStyle ButtonSelected;
 
         static AHUIStyling()
         {
@@ -68,7 +69,11 @@ namespace AntennaHelperNext
             // Bold Button
             ButtonBold = new GUIStyle (GUI.skin.GetStyle("Button"));
             ButtonBold.fontStyle = FontStyle.Bold;
-
+            
+            // Selected button
+            ButtonSelected = new GUIStyle(GUI.skin.GetStyle("Button"));
+            ButtonSelected.normal.textColor = StartVariables.SelectorColor;
+            
             // Red button
             ButtonRed = new GUIStyle(GUI.skin.GetStyle("Button"));
             ButtonRed.normal.textColor = Color.red;

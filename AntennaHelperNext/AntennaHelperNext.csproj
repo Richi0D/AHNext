@@ -36,8 +36,11 @@
     </PropertyGroup>
     <ItemGroup>
         <Compile Include="AHAntennas.cs" />
+        <Compile Include="AHCommNet.cs" />
         <Compile Include="AHEditor.cs" />
         <Compile Include="AHEditorWindows.cs" />
+        <Compile Include="AHFlight.cs" />
+        <Compile Include="AHFlighWindows.cs" />
         <Compile Include="AHPlanetList.cs" />
         <Compile Include="AHSettings.cs" />
         <Compile Include="AHShipList.cs" />

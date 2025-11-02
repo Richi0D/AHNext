@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.Eventing.Reader;
 using UnityEngine;
 using KSP.Localization;
 using ToolbarControl_NS;
-using ClickThroughFix;
+using CommNet;
 
 namespace AntennaHelperNext
 {
@@ -13,15 +12,21 @@ namespace AntennaHelperNext
 	public class AHTrackingStation : MonoBehaviour
 	{
 
-		// Editor variables for GUI
+		// Trackingstation variables for GUI
 		public static float trackingStationLevel;
-		// Target variables
 		public static double DSNPower = 0;
+		// Target variables
 		public static AHDisplayType displayType = AHDisplayType.ACTIVE;
 		public static AHTargetType selectedShipType = AHTargetType.FLIGHT;
 		// Vessel variables
 		public static Vessel activeVessel;
 		public static AHShipAntennas ActiveShipAntennas = new AHShipAntennas();
+		public static List<ProtoVessel> activeCommPathVessels; // save here the vessels from the commpath
+		
+		//debugging
+		public static double debugSignalStrength = 0;
+		public static string debugPath = "";
+		public static CommPath debugCommPath;
 
 		public void Start()
 		{
@@ -31,7 +36,7 @@ namespace AntennaHelperNext
 				return;
 			}
 			
-			// init editor variables for GUI
+			// init trackingstation variables for GUI
 			trackingStationLevel = ScenarioUpgradeableFacilities.GetFacilityLevel (SpaceCenterFacility.TrackingStation);
 			DSNPower = GameVariables.Instance.GetDSNRange (trackingStationLevel);
 			displayType = AHDisplayType.ACTIVE;
@@ -76,9 +81,11 @@ namespace AntennaHelperNext
 		
 		public void Update ()
 		{
+			
 		}
+		
 
-		public static void GetActiveVessel()
+		public void GetActiveVessel()
 		{
 			var target = PlanetariumCamera.fetch?.target;
 			if (target != null && target.type == MapObject.ObjectType.Vessel)
@@ -87,6 +94,7 @@ namespace AntennaHelperNext
 				ActiveShipAntennas = new AHShipAntennas(); // create new instance, otherwise we overwrite another one.
 				ActiveShipAntennas.FetchAntennas(activeVessel.protoVessel.protoPartSnapshots, false);
 				selectedShipType = AHTargetType.FLIGHT;
+				activeCommPathVessels = AHCommNet.GetCommPathVessels(activeVessel);
 				
 				// Guid vid = activeVessel.protoVessel.vesselID;
 				// Debug.Log("Active Vessel: " + activeVessel.protoVessel.vesselID);
@@ -106,6 +114,7 @@ namespace AntennaHelperNext
 			{
 				activeVessel = null;
 				ActiveShipAntennas = new AHShipAntennas();
+				selectedShipType = AHTargetType.DSN; // we just set it to DSN, because we don't have a vessel selected.
 			}
 		}
 		

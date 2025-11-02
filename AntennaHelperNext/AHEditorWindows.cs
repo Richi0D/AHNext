@@ -122,12 +122,12 @@ namespace AntennaHelperNext
 			GUILayout.BeginHorizontal ();
 			GUILayout.Label( /*Current target*/Localizer.Format("#autoLOC_AH_0006") + " : ",
 				AHUIStyling.DefaultLabel, GUILayout.Width(widthFirstCol));
-			GUILayout.Label(AntennaHelperEditor.targetName, AHUIStyling.DefaultLabel);
+			GUILayout.Label(AntennaHelperEditor.selectedTarget.targetName, AHUIStyling.DefaultLabel);
 			GUILayout.EndHorizontal();
 			GUILayout.BeginHorizontal ();
 			GUILayout.Label( /*Target Power*/Localizer.Format("#autoLOC_AH_0101") + " : ",
 				AHUIStyling.DefaultLabel,GUILayout.Width(widthFirstCol));
-			GUILayout.Label(  AHUtil.ToKMG(AntennaHelperEditor.targetPower, decimalPlaces: 2), AHUIStyling.DefaultLabel);
+			GUILayout.Label(  AHUtil.ToKMG(AntennaHelperEditor.selectedTarget.targetPower, decimalPlaces: 2), AHUIStyling.DefaultLabel);
 			GUILayout.EndHorizontal();
 			AHUIStyling.DrawSeparator();
 			
@@ -146,8 +146,8 @@ namespace AntennaHelperNext
 			GUILayout.Label(/*Status*/Localizer.Format("#autoLOC_AH_0008") + " : ",
 				AHUIStyling.DefaultLabel,  GUILayout.Width(widthFirstCol));
 			GUILayout.Label(/*Vessel*/Localizer.Format("#autoLOC_AH_0042", new string[] {
-				(AntennaHelperEditor.EditorShipAntennas.DirectCombAntennas.Count + AntennaHelperEditor.EditorShipAntennas.RelayCombAntennas.Count).ToString (),
-				AntennaHelperEditor.EditorShipAntennas.Antennas.Count.ToString ()
+				(AntennaHelperEditor.EditorShipAntennas.VesselCombAntennas.Count).ToString (),
+				AntennaHelperEditor.EditorShipAntennas.VesselAntennas.Count.ToString ()
 			}), AHUIStyling.DefaultLabel, GUILayout.Width(widthSecondCol));
 			GUILayout.Label(/*Relay*/Localizer.Format("#autoLOC_AH_0042", new string[] {
 				AntennaHelperEditor.EditorShipAntennas.RelayCombAntennas.Count.ToString (),
@@ -158,7 +158,7 @@ namespace AntennaHelperNext
 			GUILayout.Label(/*Strongest*/Localizer.Format("#autoLOC_AH_0107") + " : ",
 				AHUIStyling.DefaultLabel,  GUILayout.Width(widthFirstCol));
 			// get strongest antennas
-			string strongestAntenna = GetStrongestAntennaString(AntennaHelperEditor.EditorShipAntennas.StrongestAntenna, null);
+			string strongestAntenna = GetStrongestAntennaString(AntennaHelperEditor.EditorShipAntennas.StrongestVesselAntenna, null);
 			string strongestAntennaRelay = GetStrongestAntennaString(AntennaHelperEditor.EditorShipAntennas.StrongestRelayAntenna, 
 				AntennaHelperEditor.EditorShipAntennas.StrongestRelayAntennaNonCombinable);
 			GUILayout.Label(/*Vessel*/strongestAntenna, AHUIStyling.DefaultLabel, GUILayout.Width(widthSecondCol));
@@ -269,10 +269,10 @@ namespace AntennaHelperNext
 					dsnStr = "**" + dsnStr + "**";
 				}
 				// mark current target
-				if (AntennaHelperEditor.targetName == Localizer.Format("#autoLOC_AH_0015") + " " +
+				if (AntennaHelperEditor.selectedTarget.targetName == Localizer.Format("#autoLOC_AH_0015") + " " +
 				    (int)((i / 2f) * 2 + 1))
 				{
-					ButtonStyle = AHUIStyling.ButtonRed;
+					ButtonStyle = AHUIStyling.ButtonSelected;
 				}
 				else
 				{
@@ -282,20 +282,20 @@ namespace AntennaHelperNext
 				if (GUILayout.Button(dsnStr, ButtonStyle))
 				{
 					//AntennaHelperEditor.CloseWindow("EditorTarget");
-					AntennaHelperEditor.targetPower = GameVariables.Instance.GetDSNRange (i / 2f);
-					AntennaHelperEditor.targetName = Localizer.Format("#autoLOC_AH_0015") + " " +
+					double targetPower = GameVariables.Instance.GetDSNRange (i / 2f);
+					string targetName = Localizer.Format("#autoLOC_AH_0015") + " " +
 					                                 (int)((i / 2f) * 2 + 1);
-					AntennaHelperEditor.targetType = AHTargetType.DSN;
-					AntennaHelperEditor.EditorShipAntennas.UpdateRanges(AntennaHelperEditor.targetPower);
+					AntennaHelperEditor.selectedTarget = (targetName,Guid.Empty, targetPower, AHTargetType.DSN);
+					AntennaHelperEditor.EditorShipAntennas.UpdateRanges(AntennaHelperEditor.selectedTarget.targetPower);
 					AntennaHelperEditor.UpdateCustomRange(AntennaHelperEditor.EditorCustomRange.customDistance);
 				}
 			}
 
 			// Ship Selector (In-Flight Ships)
 			GUILayout.BeginHorizontal ();
-			if (AHTargetType.FLIGHT == AntennaHelperEditor.targetType)
+			if (AHTargetType.FLIGHT == AntennaHelperEditor.selectedTarget.targetType)
 			{
-				ButtonStyle = AHUIStyling.ButtonRed;
+				ButtonStyle = AHUIStyling.ButtonSelected;
 			}
 			else
 			{
@@ -309,9 +309,9 @@ namespace AntennaHelperNext
 				WindowInfo.ShowWindow("EditorTargetShipFlight", AntennaHelperEditor.EditorWindows);
 			}
 			// Ship Selector (Editor Ships VAB)
-			if (AHTargetType.EDITORVAB == AntennaHelperEditor.targetType)
+			if (AHTargetType.EDITORVAB == AntennaHelperEditor.selectedTarget.targetType)
 			{
-				ButtonStyle = AHUIStyling.ButtonRed;
+				ButtonStyle = AHUIStyling.ButtonSelected;
 			}
 			else
 			{
@@ -325,9 +325,9 @@ namespace AntennaHelperNext
 				WindowInfo.ShowWindow("EditorTargetShipEditorVAB", AntennaHelperEditor.EditorWindows);
 			}
 			// Ship Selector (Editor Ships SPH)
-			if (AHTargetType.EDITORSPH == AntennaHelperEditor.targetType)
+			if (AHTargetType.EDITORSPH == AntennaHelperEditor.selectedTarget.targetType)
 			{
-				ButtonStyle = AHUIStyling.ButtonRed;
+				ButtonStyle = AHUIStyling.ButtonSelected;
 			}
 			else
 			{
@@ -341,9 +341,9 @@ namespace AntennaHelperNext
 				WindowInfo.ShowWindow("EditorTargetShipEditorSPH", AntennaHelperEditor.EditorWindows);
 			}			
 			// Parts Selector
-			if (AHTargetType.PART == AntennaHelperEditor.targetType)
+			if (AHTargetType.PART == AntennaHelperEditor.selectedTarget.targetType)
 			{
-				ButtonStyle = AHUIStyling.ButtonRed;
+				ButtonStyle = AHUIStyling.ButtonSelected;
 			}
 			else
 			{
@@ -372,17 +372,17 @@ namespace AntennaHelperNext
 			GUILayout.BeginVertical ();
 			scrollVectorEditorVAB = GUILayout.BeginScrollView (scrollVectorEditorVAB);
 			foreach (var item in AHShipList.EditorShipListVAB) {
-				string vessel = item.Key;
-				AHShipAntennas shipantennas = item.Value;
 				
-				string vesselName = vessel;
+				string vesselName = item.Key.name;
+				Guid vid = item.Key.vID;
+				AHShipAntennas shipantennas = item.Value;
 				string vesselPower = AHUtil.ToKMG(shipantennas.RelayPower, false, 2);
 				string strButton = vesselName + " (" + vesselPower + ")";
 
 				GUIStyle buttonStyle;
-				if (AntennaHelperEditor.targetName == vesselName)
+				if (AntennaHelperEditor.selectedTarget.targetID == vid)
 				{
-					buttonStyle = AHUIStyling.ButtonRed;
+					buttonStyle = AHUIStyling.ButtonSelected;
 				}
 				else
 				{
@@ -390,10 +390,9 @@ namespace AntennaHelperNext
 				}
 				
 				if (GUILayout.Button(strButton, buttonStyle)) {
-					AntennaHelperEditor.targetName = vesselName;
-					AntennaHelperEditor.targetPower = shipantennas.RelayPower;
-					AntennaHelperEditor.targetType = AHTargetType.EDITORVAB;
-					AntennaHelperEditor.EditorShipAntennas.UpdateRanges(AntennaHelperEditor.targetPower);
+					AntennaHelperEditor.selectedTarget =
+						(vesselName, vid, shipantennas.RelayPower, AHTargetType.EDITORVAB);
+					AntennaHelperEditor.EditorShipAntennas.UpdateRanges(AntennaHelperEditor.selectedTarget.targetPower);
 					AntennaHelperEditor.UpdateCustomRange(AntennaHelperEditor.EditorCustomRange.customDistance);
 				}
 			}
@@ -412,17 +411,17 @@ namespace AntennaHelperNext
 			GUILayout.BeginVertical ();
 			scrollVectorEditorSPH = GUILayout.BeginScrollView (scrollVectorEditorSPH);
 			foreach (var item in AHShipList.EditorShipListSPH) {
-				string vessel = item.Key;
-				AHShipAntennas shipantennas = item.Value;
 				
-				string vesselName = vessel;
+				string vesselName = item.Key.name;
+				Guid vid = item.Key.vID;
+				AHShipAntennas shipantennas = item.Value;
 				string vesselPower = AHUtil.ToKMG(shipantennas.RelayPower, false, 2);
 				string strButton = vesselName + " (" + vesselPower + ")";
 
 				GUIStyle buttonStyle;
-				if (AntennaHelperEditor.targetName == vesselName)
+				if (AntennaHelperEditor.selectedTarget.targetID == vid)
 				{
-					buttonStyle = AHUIStyling.ButtonRed;
+					buttonStyle = AHUIStyling.ButtonSelected;
 				}
 				else
 				{
@@ -430,10 +429,9 @@ namespace AntennaHelperNext
 				}
 				
 				if (GUILayout.Button(strButton, buttonStyle)) {
-					AntennaHelperEditor.targetName = vesselName;
-					AntennaHelperEditor.targetPower = shipantennas.RelayPower;
-					AntennaHelperEditor.targetType = AHTargetType.EDITORSPH;
-					AntennaHelperEditor.EditorShipAntennas.UpdateRanges(AntennaHelperEditor.targetPower);
+					AntennaHelperEditor.selectedTarget =
+						(vesselName, vid, shipantennas.RelayPower, AHTargetType.EDITORSPH);
+					AntennaHelperEditor.EditorShipAntennas.UpdateRanges(AntennaHelperEditor.selectedTarget.targetPower);
 					AntennaHelperEditor.UpdateCustomRange(AntennaHelperEditor.EditorCustomRange.customDistance);
 				}
 			}
@@ -456,13 +454,14 @@ namespace AntennaHelperNext
 				AHShipAntennas shipantennas = item.Value;
 				
 				string vesselName = vessel.GetDisplayName();
+				Guid vid = vessel.vesselID;
 				string vesselPower = AHUtil.ToKMG(shipantennas.RelayPower, false, 2);
 				string strButton = vesselName + " (" + vesselPower + ")";
 
 				GUIStyle buttonStyle;
-				if (AntennaHelperEditor.targetName == vesselName)
+				if (AntennaHelperEditor.selectedTarget.targetID == vid)
 				{
-					buttonStyle = AHUIStyling.ButtonRed;
+					buttonStyle = AHUIStyling.ButtonSelected;
 				}
 				else
 				{
@@ -470,10 +469,9 @@ namespace AntennaHelperNext
 				}
 				
 				if (GUILayout.Button(strButton, buttonStyle)) {
-					AntennaHelperEditor.targetName = vesselName;
-					AntennaHelperEditor.targetPower = shipantennas.RelayPower;
-					AntennaHelperEditor.targetType = AHTargetType.FLIGHT;
-					AntennaHelperEditor.EditorShipAntennas.UpdateRanges(AntennaHelperEditor.targetPower);
+					AntennaHelperEditor.selectedTarget =
+						(vesselName, vid, shipantennas.RelayPower, AHTargetType.FLIGHT);
+					AntennaHelperEditor.EditorShipAntennas.UpdateRanges(AntennaHelperEditor.selectedTarget.targetPower);
 					AntennaHelperEditor.UpdateCustomRange(AntennaHelperEditor.EditorCustomRange.customDistance);
 				}
 			}
@@ -485,11 +483,12 @@ namespace AntennaHelperNext
 		private static void updateTargetPowerPart()
 		{
 			AntennaHelperEditor.EditorAntennasPicker.UpdateAntennas();
-			AntennaHelperEditor.targetType = AHTargetType.PART;
-			AntennaHelperEditor.targetName = AntennaHelperEditor.EditorAntennasPicker.Antennas.Count + 
+			AntennaHelperEditor.selectedTarget.targetType = AHTargetType.PART;
+			AntennaHelperEditor.selectedTarget.targetName = AntennaHelperEditor.EditorAntennasPicker.VesselAntennas.Count + 
 			                                 " " + Localizer.Format ("#autoLOC_AH_0018");
-			AntennaHelperEditor.targetPower = AntennaHelperEditor.EditorAntennasPicker.RelayPower;
-			AntennaHelperEditor.EditorShipAntennas.UpdateRanges(AntennaHelperEditor.targetPower);
+			AntennaHelperEditor.selectedTarget.targetID = Guid.Empty;
+			AntennaHelperEditor.selectedTarget.targetPower = AntennaHelperEditor.EditorAntennasPicker.RelayPower;
+			AntennaHelperEditor.EditorShipAntennas.UpdateRanges(AntennaHelperEditor.selectedTarget.targetPower);
 			AntennaHelperEditor.UpdateCustomRange(AntennaHelperEditor.EditorCustomRange.customDistance);
 		}
 		private static Vector2 scrollVectorPart;

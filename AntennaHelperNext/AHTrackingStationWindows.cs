@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using CommNet;
 using UnityEngine;
 using KSP.Localization;
 
@@ -39,7 +40,7 @@ namespace AntennaHelperNext
             GUILayout.BeginHorizontal();
             if (AHTargetType.EDITORVAB == AHTrackingStation.selectedShipType)
             {
-                ButtonStyle = AHUIStyling.ButtonRed;
+                ButtonStyle = AHUIStyling.ButtonSelected;
             }
             else
             {
@@ -48,13 +49,17 @@ namespace AntennaHelperNext
             if (GUILayout.Button(Localizer.Format ("#autoLOC_AH_0017") + " " + Localizer.Format ("#autoLOC_AH_0019"),
                     ButtonStyle))
             {
+                if (AHTrackingStation.TrackingStationWindows["TrackingTargetVAB"].IsVisible)
+                {
+                    WindowInfo.CloseWindow("TrackingTargetVAB", AHTrackingStation.TrackingStationWindows);
+                }
                 WindowInfo.CloseWindow("TrackingTargetSPH", AHTrackingStation.TrackingStationWindows);
                 WindowInfo.ShowWindow("TrackingTargetVAB", AHTrackingStation.TrackingStationWindows);
                     
             }
             if (AHTargetType.EDITORSPH == AHTrackingStation.selectedShipType)
             {
-                ButtonStyle = AHUIStyling.ButtonRed;
+                ButtonStyle = AHUIStyling.ButtonSelected;
             }
             else
             {
@@ -63,6 +68,10 @@ namespace AntennaHelperNext
             if (GUILayout.Button(Localizer.Format ("#autoLOC_AH_0017") + " " + Localizer.Format ("#autoLOC_AH_0020"),
                     ButtonStyle))
             {
+                if (AHTrackingStation.TrackingStationWindows["TrackingTargetSPH"].IsVisible)
+                {
+                    WindowInfo.CloseWindow("TrackingTargetSPH", AHTrackingStation.TrackingStationWindows);
+                }
                 WindowInfo.CloseWindow("TrackingTargetVAB", AHTrackingStation.TrackingStationWindows);
                 WindowInfo.ShowWindow("TrackingTargetSPH", AHTrackingStation.TrackingStationWindows);
                     
@@ -96,12 +105,22 @@ namespace AntennaHelperNext
                 GUILayout.Label(/*Vessel*/AHUtil.ToKMG(AHTrackingStation.ActiveShipAntennas.VesselPower,decimalPlaces:2),
                     AHUIStyling.DefaultLabel);
                 GUILayout.EndHorizontal();
+                
+                GUILayout.BeginHorizontal();
+                GUILayout.Label(/*Antennas extended*/Localizer.Format("#autoLOC_AH_0109") + " : ",
+                    AHUIStyling.DefaultLabel, GUILayout.Width(widthFirstCol));
+                GUILayout.Label(/*count*/Localizer.Format("#autoLOC_AH_0110", new string[] {
+                        (AHTrackingStation.ActiveShipAntennas.VesselAntennas.Count - AHTrackingStation.ActiveShipAntennas.AntennasNotExtended.Count).ToString(),
+                        (AHTrackingStation.ActiveShipAntennas.AntennasNotExtended.Count + AHTrackingStation.ActiveShipAntennas.VesselAntennas.Count).ToString()
+                    }),
+                    AHUIStyling.DefaultLabel);
+                GUILayout.EndHorizontal();                
             }
             AHUIStyling.DrawSeparator();
             // Button Active connection
             if (AHDisplayType.ACTIVE == AHTrackingStation.displayType)
             {
-                ButtonStyle = AHUIStyling.ButtonRed;
+                ButtonStyle = AHUIStyling.ButtonSelected;
             }
             else
             {
@@ -116,7 +135,7 @@ namespace AntennaHelperNext
             // Button DSN connection
             if (AHDisplayType.DSN == AHTrackingStation.displayType)
             {
-                ButtonStyle = AHUIStyling.ButtonRed;
+                ButtonStyle = AHUIStyling.ButtonSelected;
             }
             else
             {
@@ -131,7 +150,7 @@ namespace AntennaHelperNext
             // Button RELAY connection
             if (AHDisplayType.RELAY == AHTrackingStation.displayType)
             {
-                ButtonStyle = AHUIStyling.ButtonRed;
+                ButtonStyle = AHUIStyling.ButtonSelected;
             }
             else
             {
@@ -146,7 +165,7 @@ namespace AntennaHelperNext
             // Button DSN+RELAY connection
             if (AHDisplayType.DSNRELAY == AHTrackingStation.displayType)
             {
-                ButtonStyle = AHUIStyling.ButtonRed;
+                ButtonStyle = AHUIStyling.ButtonSelected;
             }
             else
             {
@@ -156,7 +175,21 @@ namespace AntennaHelperNext
             {
                 AHTrackingStation.displayType = AHDisplayType.DSNRELAY;
                 // TODO: Update GUI
-            }          
+            }
+            
+            // DEBUG
+            GUILayout.Label ("SignalStrenght");
+            GUILayout.Label (AHTrackingStation.debugSignalStrength.ToString());
+            
+            // GUILayout.Label ("CommPath");
+            // foreach (CommLink link in AHTrackingStation.debugCommPath)
+            // {
+            //     Vessel v = link.a.transform.GetComponent<Vessel>();
+            //     
+            //     GUILayout.Label (link.a.displayName);
+            //     GUILayout.Label (v.vesselName);
+            // }
+            
             GUILayout.EndVertical();
             GUI.DragWindow();
         }
@@ -170,17 +203,16 @@ namespace AntennaHelperNext
             GUILayout.BeginVertical ();
             scrollVectorShipListVAB = GUILayout.BeginScrollView (scrollVectorShipListVAB);
             foreach (var item in AHShipList.EditorShipListVAB) {
-                string vessel = item.Key;
                 AHShipAntennas shipantennas = item.Value;
-				
-                string vesselName = vessel;
+                string vesselName = item.Key.name;
+                Guid vid = item.Key.vID;
                 string vesselPower = AHUtil.ToKMG(shipantennas.RelayPower, false, 2);
                 string strButton = vesselName + " (" + vesselPower + ")";
 
                 GUIStyle buttonStyle;
-                if (AHTrackingStation.activeVessel.vesselName == vesselName)
+                if (AHTrackingStation.activeVessel != null && AHTrackingStation.activeVessel.id == vid)
                 {
-                    buttonStyle = AHUIStyling.ButtonRed;
+                    buttonStyle = AHUIStyling.ButtonSelected;
                 }
                 else
                 {
@@ -191,10 +223,15 @@ namespace AntennaHelperNext
                     // create a new dummy vessel
                     Vessel dummyVessel = new Vessel();
                     dummyVessel.vesselName = vesselName;
+                    dummyVessel.id = vid;
+                    //dummyVessel.protoVessel.vesselID = new Guid(vid);
                     dummyVessel.vesselType = VesselType.Unknown;
                     AHTrackingStation.selectedShipType = AHTargetType.EDITORVAB;
                     AHTrackingStation.activeVessel = dummyVessel;
                     AHTrackingStation.ActiveShipAntennas = shipantennas;
+                    
+                    // update commpath
+                    AHCommNet.GetCommPathVessels(dummyVessel, true);
                     //TODO: update GUI
                 }
             }
@@ -212,17 +249,16 @@ namespace AntennaHelperNext
             GUILayout.BeginVertical ();
             scrollVectorShipListSPH = GUILayout.BeginScrollView (scrollVectorShipListSPH);
             foreach (var item in AHShipList.EditorShipListSPH) {
-                string vessel = item.Key;
                 AHShipAntennas shipantennas = item.Value;
-				
-                string vesselName = vessel;
+                string vesselName = item.Key.name;
+                Guid vid = item.Key.vID;
                 string vesselPower = AHUtil.ToKMG(shipantennas.RelayPower, false, 2);
                 string strButton = vesselName + " (" + vesselPower + ")";
 
                 GUIStyle buttonStyle;
-                if (AHTrackingStation.activeVessel.vesselName == vesselName)
+                if (AHTrackingStation.activeVessel != null && AHTrackingStation.activeVessel.id== vid)
                 {
-                    buttonStyle = AHUIStyling.ButtonRed;
+                    buttonStyle = AHUIStyling.ButtonSelected;
                 }
                 else
                 {
@@ -233,10 +269,14 @@ namespace AntennaHelperNext
                     // create a new dummy vessel
                     Vessel dummyVessel = new Vessel();
                     dummyVessel.vesselName = vesselName;
+                    dummyVessel.id = vid;
                     dummyVessel.vesselType = VesselType.Unknown;
                     AHTrackingStation.selectedShipType = AHTargetType.EDITORSPH;
                     AHTrackingStation.activeVessel = dummyVessel;
                     AHTrackingStation.ActiveShipAntennas = shipantennas;
+                    
+                    // update commpath
+                    AHCommNet.GetCommPathVessels(dummyVessel, true);
                     //TODO: update GUI
                 }
             }

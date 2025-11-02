@@ -9,8 +9,8 @@ namespace AntennaHelperNext
     {
         public static string VABSavePath = ShipConstruction.GetCurrentGameShipsPathFor(EditorFacility.VAB);
         public static string SPHSavePath = ShipConstruction.GetCurrentGameShipsPathFor(EditorFacility.SPH);
-        public static Dictionary<string, AHShipAntennas> EditorShipListVAB = new Dictionary<string, AHShipAntennas>();
-        public static Dictionary<string, AHShipAntennas> EditorShipListSPH = new Dictionary<string, AHShipAntennas>();
+        public static Dictionary<(string name, Guid vID), AHShipAntennas> EditorShipListVAB = new Dictionary<(string name, Guid vID), AHShipAntennas>();
+        public static Dictionary<(string name, Guid vID), AHShipAntennas> EditorShipListSPH = new Dictionary<(string name, Guid vID), AHShipAntennas>();
         public static Dictionary<Vessel, AHShipAntennas> FlightShipList = new Dictionary<Vessel, AHShipAntennas>();
         public static Dictionary<ProtoVessel, AHShipAntennas> FlightProtoShipList = new Dictionary<ProtoVessel, AHShipAntennas>();
         public static Dictionary<string, ModuleDataTransmitter> AntennaPartList = new Dictionary<string, ModuleDataTransmitter>();
@@ -23,9 +23,9 @@ namespace AntennaHelperNext
         //     FlightProtoShipList = GetAllFlyingProtoVessels();
         // }
 
-        public static Dictionary<string, AHShipAntennas> GetAllSavedShips (string folderPath)
+        public static Dictionary<(string name, Guid vID), AHShipAntennas> GetAllSavedShips (string folderPath)
         {
-            Dictionary<string, AHShipAntennas> shipFiles = new Dictionary<string, AHShipAntennas>();
+            Dictionary<(string name, Guid vID), AHShipAntennas> shipFiles = new Dictionary<(string name, Guid vID), AHShipAntennas>();
             if (!Directory.Exists(folderPath))
             {
                 Debug.LogWarning($"[AntennaHelper] Folder not found: {folderPath}");
@@ -43,10 +43,12 @@ namespace AntennaHelperNext
                         ConfigNode craftFile = ConfigNode.Load(file);
                         //string shipname = craftFile.GetValue("ship");
                         string shipname = Path.GetFileNameWithoutExtension(file);
+                        Guid shipID = Guid.NewGuid(); // we need a new GUID for each ship
+                        
                         AHShipAntennas shipAntennas = GetAntennasFromCraftFile(craftFile);
                         if (shipAntennas.RelayPower > 0)
                         {
-                            shipFiles.Add(shipname, shipAntennas);
+                            shipFiles.Add((shipname, shipID), shipAntennas);
                         }
                         
                         // // Read text and look for line
@@ -146,7 +148,7 @@ namespace AntennaHelperNext
             
             EditorShipListVAB = GetAllSavedShips(VABSavePath);
             EditorShipListSPH = GetAllSavedShips(SPHSavePath);
-            FlightShipList = GetAllFlyingVessels();
+            //FlightShipList = GetAllFlyingVessels(); // we don't need this anymore'
             FlightProtoShipList = GetAllFlyingProtoVessels();
         }
         

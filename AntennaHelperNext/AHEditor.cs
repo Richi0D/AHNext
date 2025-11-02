@@ -15,9 +15,7 @@ namespace AntennaHelperNext
 	    // Editor variables for GUI
 	    public static float trackingStationLevel;
 	    // Target variables
-	    public static double targetPower = 0;
-	    public static string targetName = "";
-	    public static AHTargetType targetType = AHTargetType.DSN;
+	    public static (string targetName, Guid targetID, double targetPower, AHTargetType targetType) selectedTarget = ("", Guid.Empty, 0, AHTargetType.DSN);
 	    // Vessel variables
 	    public static AHShipAntennas EditorShipAntennas = new AHShipAntennas();
 	    public static AHShipAntennas EditorAntennasPicker = new AHShipAntennas();
@@ -34,9 +32,9 @@ namespace AntennaHelperNext
             
             // init editor variables for GUI
             trackingStationLevel = ScenarioUpgradeableFacilities.GetFacilityLevel (SpaceCenterFacility.TrackingStation);
-            targetPower = GameVariables.Instance.GetDSNRange (trackingStationLevel);
-            targetName = Localizer.Format ("#autoLOC_AH_0015") + " " + (int)(trackingStationLevel * 2 + 1);
-			targetType = AHTargetType.DSN;
+            double targetPower = GameVariables.Instance.GetDSNRange (trackingStationLevel);
+            string targetName = Localizer.Format ("#autoLOC_AH_0015") + " " + (int)(trackingStationLevel * 2 + 1);
+            selectedTarget = (targetName, Guid.Empty, targetPower, AHTargetType.DSN);
             
             // Toolbar
             GameEvents.onGUIApplicationLauncherReady.Add (AddToolbarButton);
@@ -50,7 +48,7 @@ namespace AntennaHelperNext
             
             // fetch Antennas
             EditorShipAntennas.FetchAntennas(EditorLogic.fetch.ship.Parts, true);
-            EditorShipAntennas.UpdateRanges(targetPower);
+            EditorShipAntennas.UpdateRanges(selectedTarget.targetPower);
 			
             // attach editor logic to each event
             GameEvents.onEditorLoad.Add (VesselLoad);
@@ -115,7 +113,7 @@ namespace AntennaHelperNext
         private void RefreshAntennas()
         {
 	        EditorShipAntennas.FetchAntennas(EditorLogic.fetch.ship.Parts, true);
-	        EditorShipAntennas.UpdateRanges(targetPower);
+	        EditorShipAntennas.UpdateRanges(selectedTarget.targetPower);
 	        UpdateCustomRange(EditorCustomRange.customDistance);
         }
         
@@ -150,7 +148,7 @@ namespace AntennaHelperNext
 	        {
 		        EditorShipAntennas.RemoveAntenna(part);
 		        // Symmetry counterparts
-		        foreach (ModuleDataTransmitter antennaSym in EditorShipAntennas.Antennas.ToList())
+		        foreach (ModuleDataTransmitter antennaSym in EditorShipAntennas.VesselAntennas.ToList())
 		        {
 			        if (antennaSym.part.isSymmetryCounterPart(part))
 			        {
@@ -164,14 +162,14 @@ namespace AntennaHelperNext
 		        }
 	        }
 	        EditorShipAntennas.UpdateAntennas();
-	        EditorShipAntennas.UpdateRanges(targetPower);
+	        EditorShipAntennas.UpdateRanges(selectedTarget.targetPower);
 	        UpdateCustomRange(EditorCustomRange.customDistance);
         }
 
         public static void UpdateCustomRange(double range)
         {
-	        double maxVesselRange = AHUtil.GetMaxRange(EditorShipAntennas.VesselPower, targetPower);
-	        double maxRelayRange = AHUtil.GetMaxRange(EditorShipAntennas.RelayPower, targetPower);
+	        double maxVesselRange = AHUtil.GetMaxRange(EditorShipAntennas.VesselPower, selectedTarget.targetPower);
+	        double maxRelayRange = AHUtil.GetMaxRange(EditorShipAntennas.RelayPower, selectedTarget.targetPower);
 	        double VesselSignal = AHUtil.GetSignalStrength(AHUtil.GetNormalizedRange(range, maxVesselRange));
 	        double RelaySignal = AHUtil.GetSignalStrength(AHUtil.GetNormalizedRange(range, maxRelayRange));
 	        EditorCustomRange = (range, VesselSignal, RelaySignal);
