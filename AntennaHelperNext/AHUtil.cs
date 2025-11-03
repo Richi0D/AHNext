@@ -20,6 +20,15 @@ namespace AntennaHelperNext
         DSNRELAY,
     }    
     
+    // extensions for ModuleDataTransmitter. We need to apply modifier to every call of antennaPower
+    public static class AntennaExtensions
+    {
+        public static double GetTruePower(this ModuleDataTransmitter antenna)
+        {
+            return AHUtil.TruePower(antenna.antennaPower);
+        }
+    }
+    
     public static class AHUtil
     {
         public static double TruePower (double power) {
@@ -62,7 +71,7 @@ namespace AntennaHelperNext
 
             foreach (ModuleDataTransmitter ant in antennas)
             {
-                var truePower = ant.antennaPower;
+                var truePower = ant.GetTruePower();
                 x += truePower * ant.antennaCombinableExponent;
                 y += truePower;
             }

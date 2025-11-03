@@ -189,7 +189,7 @@ namespace AntennaHelperNext
                 if (antenna.antennaCombinable)
                 {
                     VesselCombAntennas.Add(antenna);
-                    SumAntennaPower += antenna.antennaPower; // only add combinable antennas to the sum
+                    SumAntennaPower += antenna.GetTruePower(); // only add combinable antennas to the sum
                 }      
                 if (!antenna.antennaCombinable && (StrongestVesselAntennaNonCombinable is null || 
                                                    antenna.antennaPower > StrongestVesselAntennaNonCombinable.antennaPower))
@@ -207,7 +207,7 @@ namespace AntennaHelperNext
                     if (antenna.antennaCombinable)
                     {
                         RelayCombAntennas.Add(antenna);
-                        SumRelayAntennaPower += antenna.antennaPower; // only add combinable antennas to the sum
+                        SumRelayAntennaPower += antenna.GetTruePower(); // only add combinable antennas to the sum
                     }
                     if (!antenna.antennaCombinable && (StrongestRelayAntennaNonCombinable is null || 
                         antenna.antennaPower > StrongestRelayAntennaNonCombinable.antennaPower))
@@ -232,7 +232,7 @@ namespace AntennaHelperNext
             }
             else if (VesselAntennas.Count == 1)
             {
-                VesselPower = VesselAntennas[0].antennaPower; // only a single antenna on Vessel
+                VesselPower = VesselAntennas[0].GetTruePower(); // only a single antenna on Vessel
             }
             else
             {
@@ -240,18 +240,18 @@ namespace AntennaHelperNext
                 if (VesselCombAntennas.Count > 0)
                 {
                     // only calculate if we have combinable antennas
-                    VesselPower = AHUtil.CalcVesselPower(StrongestVesselAntenna.antennaPower, SumAntennaPower, AHUtil.GetAWCE(VesselCombAntennas));
+                    VesselPower = AHUtil.CalcVesselPower(StrongestVesselAntenna.GetTruePower(), SumAntennaPower, AHUtil.GetAWCE(VesselCombAntennas));
                 }
                 else
                 {
                     // fallback to the strongest vessel antenna
-                    VesselPower = StrongestVesselAntenna.antennaPower;
+                    VesselPower = StrongestVesselAntenna.GetTruePower();
                 }
                 
-                if (StrongestVesselAntennaNonCombinable != null && StrongestVesselAntennaNonCombinable.antennaPower > VesselPower)
+                if (StrongestVesselAntennaNonCombinable != null && StrongestVesselAntennaNonCombinable.GetTruePower() > VesselPower)
                 {
                     // there exists a stronger non-combinable antenna on Vessel
-                    VesselPower = StrongestVesselAntennaNonCombinable.antennaPower;
+                    VesselPower = StrongestVesselAntennaNonCombinable.GetTruePower();
                 }
             }
             // now we need the same for the relay antennas
@@ -261,7 +261,7 @@ namespace AntennaHelperNext
             }
             else if (RelayAntennas.Count == 1)
             {
-                RelayPower = RelayAntennas[0].antennaPower; // only a single antenna on Vessel
+                RelayPower = RelayAntennas[0].GetTruePower(); // only a single antenna on Vessel
             }
             else
             {
@@ -269,17 +269,17 @@ namespace AntennaHelperNext
                 if (RelayCombAntennas.Count > 0)
                 {
                     // only calculate if we have combinable antennas
-                    RelayPower = AHUtil.CalcVesselPower(StrongestRelayAntenna.antennaPower, SumRelayAntennaPower, AHUtil.GetAWCE(RelayCombAntennas));
+                    RelayPower = AHUtil.CalcVesselPower(StrongestRelayAntenna.GetTruePower(), SumRelayAntennaPower, AHUtil.GetAWCE(RelayCombAntennas));
                 }
                 else
                 {
                     // fallback to the strongest relay antenna
-                    RelayPower = StrongestRelayAntenna.antennaPower;
+                    RelayPower = StrongestRelayAntenna.GetTruePower();
                 }                
-                if (StrongestRelayAntennaNonCombinable != null && StrongestRelayAntennaNonCombinable.antennaPower > RelayPower)
+                if (StrongestRelayAntennaNonCombinable != null && StrongestRelayAntennaNonCombinable.GetTruePower() > RelayPower)
                 {
                     // there exists a stronger non-combinable antenna on Vessel
-                    RelayPower = StrongestRelayAntennaNonCombinable.antennaPower;
+                    RelayPower = StrongestRelayAntennaNonCombinable.GetTruePower();
                 }
             }
         }

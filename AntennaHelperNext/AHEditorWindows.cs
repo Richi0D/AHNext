@@ -508,7 +508,7 @@ namespace AntennaHelperNext
 				string antennaName = antenna.Key;
 				ModuleDataTransmitter antennaModule = antenna.Value;	
 				string antennaCount = AntennaHelperEditor.EditorAntennasPicker.countantennas(antennaModule).ToString();
-				string antennaPower = AHUtil.ToKMG(antennaModule.antennaPower, false, 2);
+				string antennaPower = AHUtil.ToKMG(antennaModule.GetTruePower(), false, 2);
 				string strButton = antennaName + " (" + antennaPower + ")";				
 				
 				GUILayout.BeginHorizontal ();
