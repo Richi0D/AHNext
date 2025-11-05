@@ -15,19 +15,15 @@ namespace AntennaHelperNext
 		// Trackingstation variables for GUI
 		public static float trackingStationLevel;
 		public static double DSNPower = 0;
-		// Target variables
-		public static AHDisplayType displayType = AHDisplayType.ACTIVE;
-		public static AHTargetType selectedShipType = AHTargetType.FLIGHT;
 		// Vessel variables
 		public static Vessel activeVessel;
 		public static AHShipAntennas ActiveShipAntennas = new AHShipAntennas();
-		public static List<ProtoVessel> activeCommPathVessels; // save here the vessels from the commpath
 		
 		//debugging
 		public static double debugSignalStrength = 0;
 		public static string debugPath = "";
 		public static CommPath debugCommPath;
-
+		
 		public void Start()
 		{
 			if (!HighLogic.CurrentGame.Parameters.CustomParams<AntennaHelperGameSettings>().enableInTrackingStation)
@@ -39,7 +35,7 @@ namespace AntennaHelperNext
 			// init trackingstation variables for GUI
 			trackingStationLevel = ScenarioUpgradeableFacilities.GetFacilityLevel (SpaceCenterFacility.TrackingStation);
 			DSNPower = GameVariables.Instance.GetDSNRange (trackingStationLevel);
-			displayType = AHDisplayType.ACTIVE;
+			AHMapCircle.displayType = AHDisplayType.ACTIVE;
 
 			// Toolbar
 			GameEvents.onGUIApplicationLauncherReady.Add(AddToolbarButton);
@@ -51,19 +47,76 @@ namespace AntennaHelperNext
 			AHPlanetList.LoadPlanetList();   			
 			
 			// fetch active Vessel and Antennas
-			selectedShipType = AHTargetType.FLIGHT;
+			AHMapCircle.selectedShipType = AHTargetType.FLIGHT;
 			GetActiveVessel();
 			ActiveShipAntennas.UpdateRanges(DSNPower);			
 			
 			GameEvents.onPlanetariumTargetChanged.Add(NewTarget);
 			GameEvents.OnMapFocusChange.Add(NewTarget);
 			// GameEvents.CommNet.OnCommStatusChange.Add(CommNetUpdate);
-			
 			GameEvents.onGameSceneSwitchRequested.Add (QuitEditor);
+			
+			// Cloud points
+			AHMapCircle.LoadMat();
+			DefinedParticleMeshes.Init();
+			
+			// Hook into rendering
+			Camera.onPostRender += OnPostRenderCam;
+        }
+		
+		
+		private void OnPostRenderCam(Camera cam)
+		{
+			if (!MapView.MapIsEnabled || HighLogic.LoadedScene == GameScenes.SPACECENTER)
+				return;
+			
+			// Only draw in planetarium (Tracking Station) camera
+			if (cam != PlanetariumCamera.Camera) return;
+			
+			
+			ParticleMesh mesh = DefinedParticleMeshes.MediumCloud;
+			
+			// Scale to ScaledSpace (Tracking Station uses scaled coords)
+			CelestialBody body = FlightGlobals.GetHomeBody();
+			Vector3d scaledPos = ScaledSpace.LocalToScaledSpace(body.position);
+			double radius = body.Radius * 1.2;
+			Matrix4x4 m = Matrix4x4.TRS(
+				scaledPos,
+				Quaternion.identity,
+				Vector3.one * ScaledSpace.InverseScaleFactor * (float)radius
+			);
+			// set color
+			pointMat.SetColor("POINT_COLOR", new Color(0.0f, 0.9f, 0.0f, 0.8f));
+			pointMat.SetFloat("POINT_SIZE", 10.0f);				
+			// enable material
+			pointMat.SetPass(0);
+			// render cloud
+			mesh.Render(m);
+			
+			ParticleMesh meshTwo = DefinedParticleMeshes.MediumCloud;
+			
+			// Scale to ScaledSpace (Tracking Station uses scaled coords)
+			double radiusTwo = body.Radius * 2.2;
+			Matrix4x4 mTwo = Matrix4x4.TRS(
+				scaledPos,
+				Quaternion.identity,
+				Vector3.one * ScaledSpace.InverseScaleFactor * (float)radiusTwo
+			);
+			// set color
+			pointMat.SetColor("POINT_COLOR", new Color(0.9f, 0.9f, 0.0f, 0.8f));
+			pointMat.SetFloat("POINT_SIZE", 10.0f);				
+			// enable material
+			pointMat.SetPass(0);
+			// render cloud
+			meshTwo.Render(mTwo);			
+			
 		}
 
 		public void OnDestroy()
 		{
+			// Remove Hook into rendering
+			Camera.onPostRender -= OnPostRenderCam;
+			
 			// Toolbar
 			GameEvents.onGUIApplicationLauncherReady.Remove (AddToolbarButton);
 			GameEvents.onGUIApplicationLauncherDestroyed.Remove (RemoveToolbarButton);
@@ -77,10 +130,6 @@ namespace AntennaHelperNext
 			// save positions and at last destroy the instance
 			AntennaHelperSettings.Save();
 			Destroy(this);
-		}
-		
-		public void Update ()
-		{
 			
 		}
 		
@@ -92,7 +141,7 @@ namespace AntennaHelperNext
 				activeVessel = target.vessel;
 				ActiveShipAntennas = new AHShipAntennas(); // create new instance, otherwise we overwrite another one.
 				ActiveShipAntennas.FetchAntennas(activeVessel.protoVessel.protoPartSnapshots, false);
-				selectedShipType = AHTargetType.FLIGHT;
+				AHMapCircle.selectedShipType = AHTargetType.FLIGHT;
 				activeCommPathVessels = AHCommNet.GetCommPathVessels(activeVessel);
 				
 				// Guid vid = activeVessel.protoVessel.vesselID;
@@ -113,7 +162,7 @@ namespace AntennaHelperNext
 			{
 				activeVessel = null;
 				ActiveShipAntennas = new AHShipAntennas();
-				selectedShipType = AHTargetType.DSN; // we just set it to DSN, because we don't have a vessel selected.
+				AHMapCircle.selectedShipType = AHTargetType.DSN; // we just set it to DSN, because we don't have a vessel selected.
 			}
 		}
 		

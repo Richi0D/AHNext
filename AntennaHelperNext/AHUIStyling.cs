@@ -72,7 +72,7 @@ namespace AntennaHelperNext
             
             // Selected button
             ButtonSelected = new GUIStyle(GUI.skin.GetStyle("Button"));
-            ButtonSelected.normal.textColor = StartVariables.SelectorColor;
+            ButtonSelected.normal.textColor = AHColors.Selector;
             
             // Red button
             ButtonRed = new GUIStyle(GUI.skin.GetStyle("Button"));

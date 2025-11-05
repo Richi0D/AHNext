@@ -40,7 +40,10 @@
         <Compile Include="AHEditor.cs" />
         <Compile Include="AHEditorWindows.cs" />
         <Compile Include="AHFlight.cs" />
-        <Compile Include="AHFlighWindows.cs" />
+        <Compile Include="AHFlightWindows.cs" />
+        <Compile Include="AHMapCircle.cs" />
+        <Compile Include="AHParticleMesh.cs" />
+        <Compile Include="AHParticleUtil.cs" />
         <Compile Include="AHPlanetList.cs" />
         <Compile Include="AHSettings.cs" />
         <Compile Include="AHShipList.cs" />

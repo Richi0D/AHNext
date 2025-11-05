@@ -6,9 +6,7 @@ namespace AntennaHelperNext
 {
     public static class AHPlanetList
     {
-        public static CelestialBody homeBody = FlightGlobals.GetHomeBody();
         public static Dictionary<CelestialBody,(double minDistance, double maxDistance)> PlanetList = new Dictionary<CelestialBody,(double, double)>();
-        
         
         private static (double minDistance, double maxDistance) GetDistancePlanet (CelestialBody home, CelestialBody target)
         {
@@ -30,6 +28,7 @@ namespace AntennaHelperNext
         public static void LoadPlanetList()
         {
             PlanetList.Clear();
+            CelestialBody homeBody = FlightGlobals.GetHomeBody();
             foreach (CelestialBody body in FlightGlobals.Bodies)
             {
                 // Skip the Sun and the home planet itself

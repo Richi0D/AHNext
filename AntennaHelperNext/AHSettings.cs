@@ -16,6 +16,21 @@ namespace AntennaHelperNext
 			ToolbarControl.RegisterMod(AntennaHelperEditor.MODID, Localizer.Format(AntennaHelperEditor.MODNAME));
 		}
 	}
+
+	public class AHColors
+	{
+		// UI Colors
+		public static readonly Color EditorBar = new Color(122f / 255f, 161f / 255f, 186f / 255f);
+		public static readonly Color Selector = new Color(46f / 255f, 219f / 255f, 107f / 255f);
+		public static readonly Color Separator = new Color(48f/255, 63f/255, 73f/255);
+		
+		// Bubble colors
+		public static readonly Color Bubble100 = new Color(0.0f, 0.9f, 0.0f, 0.8f);
+		public static readonly Color Bubble75 = new Color(0.7f, 0.9f, 0.0f, 0.8f);
+		public static readonly Color Bubble50 = new Color(0.9f, 0.9f, 0.0f, 0.8f);
+		public static readonly Color Bubble25 = new Color(0.9f, 0.5f, 0.0f, 0.8f);
+		public static readonly Color Bubble0 = new Color(0.9f, 0.1f, 0.0f, 0.8f);
+	}
 	
 	[KSPAddon(KSPAddon.Startup.MainMenu, true)]
 	public class StartVariables : MonoBehaviour
@@ -24,29 +39,23 @@ namespace AntennaHelperNext
 		public static Texture signalPerDistanceTex;
 		public static float uiScale;
 		public static Texture2D separatorTex;
-		public static Color EditorbarColor;
-		public static Color SelectorColor;
 
 		void Start()
 		{
 			ApplicationRootPath = KSPUtil.ApplicationRootPath;
 			// Load textures
 			signalPerDistanceTex = (Texture)GameDatabase.Instance.GetTexture ("AntennaHelperNext/Textures/signal_per_distance", false);
-			EditorbarColor = new Color(122f/255, 161f/255, 186f/255);
-			SelectorColor = new Color(46f/255, 219f/255, 107f/255);
 			// scaling parameter
 			uiScale = GameSettings.UI_SCALE;
 			// create texture for gui seperator
 			InitSeparatorTex();
-			
 		}
 		
 		public static void InitSeparatorTex()
 		{
 			// Create a simple colored texture (1x1 pixel)
-			Color separatorColor = new Color(48f/255, 63f/255, 73f/255);
 			separatorTex = new Texture2D(1,1);
-			separatorTex.SetPixel(0,0, separatorColor);
+			separatorTex.SetPixel(0,0, AHColors.Separator);
 			separatorTex.Apply();
 		}
 	}

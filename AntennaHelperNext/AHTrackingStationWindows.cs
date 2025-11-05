@@ -38,7 +38,7 @@ namespace AntennaHelperNext
             // Selected Vessel Info
             // Ship selector
             GUILayout.BeginHorizontal();
-            if (AHTargetType.EDITORVAB == AHTrackingStation.selectedShipType)
+            if (AHTargetType.EDITORVAB == AHMapCircle.selectedShipType)
             {
                 ButtonStyle = AHUIStyling.ButtonSelected;
             }
@@ -57,7 +57,7 @@ namespace AntennaHelperNext
                 WindowInfo.ShowWindow("TrackingTargetVAB", AHTrackingStation.TrackingStationWindows);
                     
             }
-            if (AHTargetType.EDITORSPH == AHTrackingStation.selectedShipType)
+            if (AHTargetType.EDITORSPH == AHMapCircle.selectedShipType)
             {
                 ButtonStyle = AHUIStyling.ButtonSelected;
             }
@@ -118,8 +118,31 @@ namespace AntennaHelperNext
                 GUILayout.EndHorizontal();                
             }
             AHUIStyling.DrawSeparator();
+            GUILayout.Label(/*Selected Signal Strength*/Localizer.Format("#autoLOC_AH_0112") ,
+                AHUIStyling.DefaultLabel);
+            GUILayout.BeginHorizontal();
+            foreach (var item in AHUtil.SignalMultipliers) {
+                double strength = item.Key;
+                
+                if (AHMapCircle.selectedSignalStrength == strength)
+                {
+                    ButtonStyle = AHUIStyling.ButtonSelected;
+                }
+                else
+                {
+                    ButtonStyle = AHUIStyling.ButtonDefault;
+                }
+				
+                if (GUILayout.Button(strength.ToString("N0"), ButtonStyle))
+                {
+                    AHMapCircle.selectedSignalStrength = strength;
+                }
+            }            
+            GUILayout.EndHorizontal();         
+            AHUIStyling.DrawSeparator();
+            
             // Button Active connection
-            if (AHDisplayType.ACTIVE == AHTrackingStation.displayType)
+            if (AHDisplayType.ACTIVE == AHMapCircle.displayType)
             {
                 ButtonStyle = AHUIStyling.ButtonSelected;
             }
@@ -129,12 +152,12 @@ namespace AntennaHelperNext
             }            
             if (GUILayout.Button(Localizer.Format("#autoLOC_AH_0045"), ButtonStyle))
             {
-                AHTrackingStation.displayType = AHDisplayType.ACTIVE;
+                AHMapCircle.displayType = AHDisplayType.ACTIVE;
                 // TODO: Update GUI
             }         
             
             // Button DSN connection
-            if (AHDisplayType.DSN == AHTrackingStation.displayType)
+            if (AHDisplayType.DSN == AHMapCircle.displayType)
             {
                 ButtonStyle = AHUIStyling.ButtonSelected;
             }
@@ -144,12 +167,12 @@ namespace AntennaHelperNext
             }            
             if (GUILayout.Button(Localizer.Format("#autoLOC_AH_0046"), ButtonStyle))
             {
-                AHTrackingStation.displayType = AHDisplayType.DSN;
+                AHMapCircle.displayType = AHDisplayType.DSN;
                 // TODO: Update GUI
             }       
             
             // Button RELAY connection
-            if (AHDisplayType.RELAY == AHTrackingStation.displayType)
+            if (AHDisplayType.RELAY == AHMapCircle.displayType)
             {
                 ButtonStyle = AHUIStyling.ButtonSelected;
             }
@@ -159,12 +182,12 @@ namespace AntennaHelperNext
             }            
             if (GUILayout.Button(Localizer.Format("#autoLOC_AH_0048"), ButtonStyle))
             {
-                AHTrackingStation.displayType = AHDisplayType.RELAY;
+                AHMapCircle.displayType = AHDisplayType.RELAY;
                 // TODO: Update GUI
             } 
             
             // Button DSN+RELAY connection
-            if (AHDisplayType.DSNRELAY == AHTrackingStation.displayType)
+            if (AHDisplayType.DSNRELAY == AHMapCircle.displayType)
             {
                 ButtonStyle = AHUIStyling.ButtonSelected;
             }
@@ -174,7 +197,7 @@ namespace AntennaHelperNext
             }            
             if (GUILayout.Button(Localizer.Format("#autoLOC_AH_0047"), ButtonStyle))
             {
-                AHTrackingStation.displayType = AHDisplayType.DSNRELAY;
+                AHMapCircle.displayType = AHDisplayType.DSNRELAY;
                 // TODO: Update GUI
             }
             
@@ -182,6 +205,19 @@ namespace AntennaHelperNext
             // GUILayout.Label ("SignalStrenght");
             // GUILayout.Label (AHTrackingStation.debugSignalStrength.ToString());
             
+            // find matching vessel from Flightlist
+            // foreach (ProtoVessel protovessel in AHShipList.FlightProtoShipList.Keys)
+            // {
+            // 	if (protovessel.vesselID == AHTrackingStation.activeVessel?.protoVessel.vesselID)
+            // 	{
+            //         Vector3d pos = protovessel.position;
+            //         GUILayout.Label ("Vesselpos proto");
+            //         GUILayout.Label (pos.ToString());                    
+            // 	}
+            // }       
+            //
+            // GUILayout.Label ("Vesselpos active");
+            // GUILayout.Label (AHTrackingStation.activeVessel?.GetWorldPos3D().ToString());               
             
             // GUILayout.Label ("CommPath");
             // foreach (CommLink link in AHTrackingStation.debugCommPath)
@@ -228,7 +264,7 @@ namespace AntennaHelperNext
                     dummyVessel.id = vid;
                     //dummyVessel.protoVessel.vesselID = new Guid(vid);
                     dummyVessel.vesselType = VesselType.Unknown;
-                    AHTrackingStation.selectedShipType = AHTargetType.EDITORVAB;
+                    AHMapCircle.selectedShipType = AHTargetType.EDITORVAB;
                     AHTrackingStation.activeVessel = dummyVessel;
                     AHTrackingStation.ActiveShipAntennas = shipantennas;
                     
@@ -273,7 +309,7 @@ namespace AntennaHelperNext
                     dummyVessel.vesselName = vesselName;
                     dummyVessel.id = vid;
                     dummyVessel.vesselType = VesselType.Unknown;
-                    AHTrackingStation.selectedShipType = AHTargetType.EDITORSPH;
+                    AHMapCircle.selectedShipType = AHTargetType.EDITORSPH;
                     AHTrackingStation.activeVessel = dummyVessel;
                     AHTrackingStation.ActiveShipAntennas = shipantennas;
                     

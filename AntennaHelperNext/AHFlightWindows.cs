@@ -5,7 +5,7 @@ using KSP.Localization;
 
 namespace AntennaHelperNext
 {
-    public static class AHFlighWindows
+    public static class AHFlightWindows
     {
         
         // Close button for all windows

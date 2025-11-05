@@ -64,6 +64,7 @@ namespace AntennaHelperNext
 			GameEvents.onGameSceneSwitchRequested.Add(QuitEditor);
 		}
 
+
 		public void OnDestroy()
 		{
 			// Toolbar
@@ -177,7 +178,7 @@ namespace AntennaHelperNext
 	        { "FlightMain", new WindowInfo(
 		        835862,
 		        new Rect(AntennaHelperSettings.WindowPositions["flight_main_window_position"], new Vector2(250, 150)),
-		        AHFlighWindows.MainWindow,
+		        AHFlightWindows.MainWindow,
 		        Localizer.Format ("#autoLOC_AH_0001"),
 		        saveKey:"flight_main_window_position")
 	        }
