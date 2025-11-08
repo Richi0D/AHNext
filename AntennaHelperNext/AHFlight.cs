@@ -14,7 +14,6 @@ namespace AntennaHelperNext
         // Flight variables for GUI
 		public static float trackingStationLevel;
 		public static double DSNPower = 0;
-		public static bool inMapView = false;
 		// Target variables
 		public static AHDisplayType displayType = AHDisplayType.ACTIVE;
 		// Vessel variables
@@ -48,7 +47,7 @@ namespace AntennaHelperNext
 			AHShipList.UpdateShipLists();
 			// get all planets
 			AHPlanetList.LoadPlanetList();
-			inMapView = false;
+			AHMapCircle.inMapView = false;
 			
 			// fetch active Vessel and Antennas
 			GetActiveVessel();
@@ -95,12 +94,12 @@ namespace AntennaHelperNext
 		
 		private void EnteringMap ()
 		{
-			inMapView = true;
+			AHMapCircle.inMapView = true;
 		}
 
 		private void ExitingMap ()
 		{
-			inMapView = false;
+			AHMapCircle.inMapView = false;
 		}		
 		
 		public void GetActiveVessel()
@@ -108,7 +107,7 @@ namespace AntennaHelperNext
 			activeVessel = FlightGlobals.ActiveVessel;
 			ActiveShipAntennas = new AHShipAntennas(); // create new instance, otherwise we overwrite another one.
 			ActiveShipAntennas.FetchAntennas(activeVessel.Parts, false);
-			activeCommPathVessels = AHCommNet.GetCommPathVessels(activeVessel);
+			//activeCommPathVessels = AHCommNet.GetCommPathVessels(activeVessel);
 		}
 		
 		private void VesselModified (Vessel v = null)

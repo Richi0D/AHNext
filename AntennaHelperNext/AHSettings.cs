@@ -25,11 +25,19 @@ namespace AntennaHelperNext
 		public static readonly Color Separator = new Color(48f/255, 63f/255, 73f/255);
 		
 		// Bubble colors
-		public static readonly Color Bubble100 = new Color(0.0f, 0.9f, 0.0f, 0.8f);
-		public static readonly Color Bubble75 = new Color(0.7f, 0.9f, 0.0f, 0.8f);
-		public static readonly Color Bubble50 = new Color(0.9f, 0.9f, 0.0f, 0.8f);
-		public static readonly Color Bubble25 = new Color(0.9f, 0.5f, 0.0f, 0.8f);
-		public static readonly Color Bubble0 = new Color(0.9f, 0.1f, 0.0f, 0.8f);
+		// public static readonly Color Bubble100 = new Color(0.0f, 0.9f, 0.0f, 0.8f);
+		// public static readonly Color Bubble75 = new Color(0.6f, 0.9f, 0.0f, 0.8f);
+		// public static readonly Color Bubble50 = new Color(0.9f, 0.9f, 0.0f, 0.8f);
+		// public static readonly Color Bubble25 = new Color(0.9f, 0.5f, 0.0f, 0.8f);
+		// public static readonly Color Bubble0 = new Color(0.9f, 0.1f, 0.0f, 0.8f);
+		
+		// Bubble colors (color-blind friendly)
+		public static readonly Color Bubble100 = new Color(0.0f, 0.60f, 0.52f, 0.8f); // teal-green
+		public static readonly Color Bubble75  = new Color(0.35f, 0.70f, 0.90f, 0.8f); // light blue
+		public static readonly Color Bubble50  = new Color(0.95f, 0.90f, 0.25f, 0.8f); // yellow
+		public static readonly Color Bubble25  = new Color(0.90f, 0.60f, 0.00f, 0.8f); // orange
+		public static readonly Color Bubble0   = new Color(0.80f, 0.33f, 0.00f, 0.8f); // reddish-brown		
+		
 	}
 	
 	[KSPAddon(KSPAddon.Startup.MainMenu, true)]

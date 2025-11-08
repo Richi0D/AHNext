@@ -18,7 +18,13 @@ namespace AntennaHelperNext
         DSN,
         RELAY,
         DSNRELAY,
-    }    
+    }
+    
+    public enum AHAntennaType
+    {
+        ALL,
+        RELAY,
+    }  
     
     // extensions for ModuleDataTransmitter. We need to apply modifier to every call of antennaPower
     public static class AntennaExtensions
@@ -100,7 +106,7 @@ namespace AntennaHelperNext
             {
                 double interval = kvp.Key;
                 double multiplier = kvp.Value;
-                if (Math.Abs(interval - 100) < 1e-6)
+                if (interval < 1e-6)
                 {
                     distanceBySignal[interval] = maxRange;
                 }

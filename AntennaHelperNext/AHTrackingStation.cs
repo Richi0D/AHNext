@@ -11,18 +11,6 @@ namespace AntennaHelperNext
 	[KSPAddon(KSPAddon.Startup.TrackingStation, false)]
 	public class AHTrackingStation : MonoBehaviour
 	{
-
-		// Trackingstation variables for GUI
-		public static float trackingStationLevel;
-		public static double DSNPower = 0;
-		// Vessel variables
-		public static Vessel activeVessel;
-		public static AHShipAntennas ActiveShipAntennas = new AHShipAntennas();
-		
-		//debugging
-		public static double debugSignalStrength = 0;
-		public static string debugPath = "";
-		public static CommPath debugCommPath;
 		
 		public void Start()
 		{
@@ -32,11 +20,6 @@ namespace AntennaHelperNext
 				return;
 			}
 			
-			// init trackingstation variables for GUI
-			trackingStationLevel = ScenarioUpgradeableFacilities.GetFacilityLevel (SpaceCenterFacility.TrackingStation);
-			DSNPower = GameVariables.Instance.GetDSNRange (trackingStationLevel);
-			AHMapCircle.displayType = AHDisplayType.ACTIVE;
-
 			// Toolbar
 			GameEvents.onGUIApplicationLauncherReady.Add(AddToolbarButton);
 			GameEvents.onGUIApplicationLauncherDestroyed.Add(RemoveToolbarButton);			
@@ -47,69 +30,39 @@ namespace AntennaHelperNext
 			AHPlanetList.LoadPlanetList();   			
 			
 			// fetch active Vessel and Antennas
-			AHMapCircle.selectedShipType = AHTargetType.FLIGHT;
+			AHMapCircle.inMapView = true;
 			GetActiveVessel();
-			ActiveShipAntennas.UpdateRanges(DSNPower);			
 			
 			GameEvents.onPlanetariumTargetChanged.Add(NewTarget);
-			GameEvents.OnMapFocusChange.Add(NewTarget);
+			//GameEvents.OnMapFocusChange.Add(NewTarget);
+			GameEvents.onVesselDestroy.Add (VesselDestroy);
 			// GameEvents.CommNet.OnCommStatusChange.Add(CommNetUpdate);
 			GameEvents.onGameSceneSwitchRequested.Add (QuitEditor);
 			
 			// Cloud points
-			AHMapCircle.LoadMat();
-			DefinedParticleMeshes.Init();
+			DefinedParticleMeshes.Init(); // init mesh before circles!
+			AHMapCircle.Init();
 			
 			// Hook into rendering
 			Camera.onPostRender += OnPostRenderCam;
         }
 		
-		
 		private void OnPostRenderCam(Camera cam)
 		{
+			// Draw when Button is active
+			if (TrackingStationWindows.ContainsKey("TrackingMain"))
+			{
+				if (!TrackingStationWindows["TrackingMain"].IsVisible) return;
+			}
+			// Draw only in Map View
 			if (!MapView.MapIsEnabled || HighLogic.LoadedScene == GameScenes.SPACECENTER)
 				return;
 			
 			// Only draw in planetarium (Tracking Station) camera
 			if (cam != PlanetariumCamera.Camera) return;
 			
-			
-			ParticleMesh mesh = DefinedParticleMeshes.MediumCloud;
-			
-			// Scale to ScaledSpace (Tracking Station uses scaled coords)
-			CelestialBody body = FlightGlobals.GetHomeBody();
-			Vector3d scaledPos = ScaledSpace.LocalToScaledSpace(body.position);
-			double radius = body.Radius * 1.2;
-			Matrix4x4 m = Matrix4x4.TRS(
-				scaledPos,
-				Quaternion.identity,
-				Vector3.one * ScaledSpace.InverseScaleFactor * (float)radius
-			);
-			// set color
-			pointMat.SetColor("POINT_COLOR", new Color(0.0f, 0.9f, 0.0f, 0.8f));
-			pointMat.SetFloat("POINT_SIZE", 10.0f);				
-			// enable material
-			pointMat.SetPass(0);
-			// render cloud
-			mesh.Render(m);
-			
-			ParticleMesh meshTwo = DefinedParticleMeshes.MediumCloud;
-			
-			// Scale to ScaledSpace (Tracking Station uses scaled coords)
-			double radiusTwo = body.Radius * 2.2;
-			Matrix4x4 mTwo = Matrix4x4.TRS(
-				scaledPos,
-				Quaternion.identity,
-				Vector3.one * ScaledSpace.InverseScaleFactor * (float)radiusTwo
-			);
-			// set color
-			pointMat.SetColor("POINT_COLOR", new Color(0.9f, 0.9f, 0.0f, 0.8f));
-			pointMat.SetFloat("POINT_SIZE", 10.0f);				
-			// enable material
-			pointMat.SetPass(0);
-			// render cloud
-			meshTwo.Render(mTwo);			
-			
+			// Draw circles
+			AHMapCircle.Render();
 		}
 
 		public void OnDestroy()
@@ -123,14 +76,14 @@ namespace AntennaHelperNext
 			RemoveToolbarButton();
 			
 			GameEvents.onPlanetariumTargetChanged.Remove(NewTarget);
-			GameEvents.OnMapFocusChange.Remove(NewTarget);
+			//GameEvents.OnMapFocusChange.Remove(NewTarget);
+			GameEvents.onVesselDestroy.Remove(VesselDestroy);
 			// GameEvents.CommNet.OnCommStatusChange.Remove(CommNetUpdate);
 			
 			GameEvents.onGameSceneSwitchRequested.Remove (QuitEditor);
 			// save positions and at last destroy the instance
 			AntennaHelperSettings.Save();
 			Destroy(this);
-			
 		}
 		
 		public void GetActiveVessel()
@@ -138,38 +91,45 @@ namespace AntennaHelperNext
 			var target = PlanetariumCamera.fetch?.target;
 			if (target != null && target.type == MapObject.ObjectType.Vessel)
 			{
-				activeVessel = target.vessel;
-				ActiveShipAntennas = new AHShipAntennas(); // create new instance, otherwise we overwrite another one.
-				ActiveShipAntennas.FetchAntennas(activeVessel.protoVessel.protoPartSnapshots, false);
+				AHMapCircle.activeVessel = (target.vessel.vesselName, target.vessel.id, target.vessel);
+				AHMapCircle.ActiveShipAntennas = new AHShipAntennas(); // create new instance, otherwise we overwrite another one.
+				AHMapCircle.ActiveShipAntennas.FetchAntennas(AHMapCircle.activeVessel.vessel.protoVessel.protoPartSnapshots, false);
 				AHMapCircle.selectedShipType = AHTargetType.FLIGHT;
-				activeCommPathVessels = AHCommNet.GetCommPathVessels(activeVessel);
-				
-				// Guid vid = activeVessel.protoVessel.vesselID;
-				// Debug.Log("Active Vessel: " + activeVessel.protoVessel.vesselID);
-				// foreach (ProtoVessel vessel in AHShipList.FlightProtoShipList.Keys)
-				// {
-				// 	if (vessel.vesselID == vid)
-				// 	{
-				// 		Debug.Log("Found Vessel in Flight ProtoShipList");
-				// 	}
-				// 	else
-				// 	{
-				// 		Debug.Log("[AH] Vessel not found in Flight ProtoShipList");
-				// 	}
-				// }
+				AHMapCircle.OnVesselChange();
 			}
 			else
 			{
-				activeVessel = null;
-				ActiveShipAntennas = new AHShipAntennas();
+				AHMapCircle.activeVessel = (null, Guid.Empty, null);
+				AHMapCircle.ActiveShipAntennas = new AHShipAntennas();
 				AHMapCircle.selectedShipType = AHTargetType.DSN; // we just set it to DSN, because we don't have a vessel selected.
+				AHMapCircle.OnVesselChange();
 			}
 		}
 		
 		private void NewTarget (MapObject targetMapObject = null)
 		{
-			GetActiveVessel();
+			// only update when we have a vessel to avoid loose of bubbles
+			if (targetMapObject != null && targetMapObject.type == MapObject.ObjectType.Vessel)
+			{
+				GetActiveVessel();
+			}
+			
 		}
+		
+		private void VesselDestroy (Vessel v = null)
+		{
+			if (v == null) {
+				Debug.Log ("[AH] a null vessel is destroyed");
+			}
+			
+			if (v == AHMapCircle.activeVessel.vessel) {
+				Debug.Log ("[AH] the active vessel is destroyed");
+			}
+			// any other vessel is destroyed, update the list of vessels
+			AHShipList.UpdateShipLists();
+			GetActiveVessel();
+		}			
+		
 		
 		public void QuitEditor (GameEvents.FromToAction<GameScenes, GameScenes> eData)
 		{

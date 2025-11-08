@@ -74,7 +74,7 @@ namespace AntennaHelperNext
                 GUILayout.EndHorizontal();                
             }
             AHUIStyling.DrawSeparator();
-            if (AHFlight.inMapView)
+            if (AHMapCircle.inMapView)
             {
                 // Button Active connection
                 if (AHDisplayType.ACTIVE == AHFlight.displayType)

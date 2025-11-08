@@ -15,6 +15,8 @@ namespace AntennaHelperNext
                 // no path for editor vessel or no vessel selected
                 return vesselsOnPath;
             }
+            //AHMapCircle.connectedToHome = false; // reset
+            AHMapCircle.directconnectedToHome = false; // reset
 			
             // a CommPath has multiple links each link is a CommLink, A is source, B is destination
             CommPath commpath = vessel.connection.ControlPath;
@@ -27,17 +29,33 @@ namespace AntennaHelperNext
                 Vessel v = link.a.transform.GetComponent<Vessel>();
                 if (v != null && v.id != vessel.id)
                 {
-                    vesselsOnPath.Add(v.protoVessel);
-                    // // find matching vessel from Flightlist
-                    // foreach (ProtoVessel protovessel in AHShipList.FlightProtoShipList.Keys)
-                    // {
-                    // 	if (protovessel.vesselID == v.protoVessel.vesselID)
-                    // 	{
-                    // 		vesselsOnPath.Add(protovessel);
-                    // 	}
-                    // }					
+                    // find matching vessel from Flightlist
+                    foreach (var kvp in AHShipList.FlightProtoShipList)
+                    {
+                    	if (kvp.Key.vesselID == v.protoVessel.vesselID)
+                    	{
+                    		vesselsOnPath.Add(kvp.Key);
+                    	}
+                    }	                    
                 }
+                if (v !=null && v.id == vessel.id)
+                {
+                    // check and save if we are directly connected to home
+                    AHMapCircle.directconnectedToHome = link.b.isHome;
+                }
+                
+                // if (link.b.isHome)
+                // {
+                //     AHMapCircle.connectedToHome = true;
+                // }               
             }
+            
+            // the length should be always smaller than 1 from the CommPath (exclude current vessel)
+            if (commpath.Count > 1 && commpath.Count - 1 != vesselsOnPath.Count)
+            {
+                Debug.Log("[AH] It seems not all CommPath vessels are found." + " CommPath Count: " + commpath.Count + " Found Count: " + vesselsOnPath.Count + "");
+            }
+            
             return vesselsOnPath;
         }
     }

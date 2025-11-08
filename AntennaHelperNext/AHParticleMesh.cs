@@ -21,7 +21,7 @@ namespace AntennaHelperNext
 			initialized = true;
 
 			SmallCloud = new ParticleMesh(GenerateSpherePoints(2000));
-			MediumCloud = new ParticleMesh(GenerateSpherePoints(10000));
+			MediumCloud = new ParticleMesh(GenerateSpherePoints(20000));
 			LargeCloud = new ParticleMesh(GenerateSpherePoints(50000));
 		}
         

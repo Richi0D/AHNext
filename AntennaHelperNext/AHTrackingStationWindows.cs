@@ -35,50 +35,52 @@ namespace AntennaHelperNext
             AHUIStyling.DrawSeparator();
             GUILayout.Space (5f);
             
-            // Selected Vessel Info
-            // Ship selector
-            GUILayout.BeginHorizontal();
-            if (AHTargetType.EDITORVAB == AHMapCircle.selectedShipType)
+            // Select Editor Vessel
+            if (HighLogic.LoadedScene == GameScenes.TRACKSTATION)
             {
-                ButtonStyle = AHUIStyling.ButtonSelected;
-            }
-            else
-            {
-                ButtonStyle = AHUIStyling.ButtonDefault;
-            }                  
-            if (GUILayout.Button(Localizer.Format ("#autoLOC_AH_0017") + " " + Localizer.Format ("#autoLOC_AH_0019"),
-                    ButtonStyle))
-            {
-                if (AHTrackingStation.TrackingStationWindows["TrackingTargetVAB"].IsVisible)
+                // Ship selector
+                GUILayout.BeginHorizontal();
+                if (AHTargetType.EDITORVAB == AHMapCircle.selectedShipType)
                 {
-                    WindowInfo.CloseWindow("TrackingTargetVAB", AHTrackingStation.TrackingStationWindows);
+                    ButtonStyle = AHUIStyling.ButtonSelected;
                 }
-                WindowInfo.CloseWindow("TrackingTargetSPH", AHTrackingStation.TrackingStationWindows);
-                WindowInfo.ShowWindow("TrackingTargetVAB", AHTrackingStation.TrackingStationWindows);
-                    
-            }
-            if (AHTargetType.EDITORSPH == AHMapCircle.selectedShipType)
-            {
-                ButtonStyle = AHUIStyling.ButtonSelected;
-            }
-            else
-            {
-                ButtonStyle = AHUIStyling.ButtonDefault;
-            }                  
-            if (GUILayout.Button(Localizer.Format ("#autoLOC_AH_0017") + " " + Localizer.Format ("#autoLOC_AH_0020"),
-                    ButtonStyle))
-            {
-                if (AHTrackingStation.TrackingStationWindows["TrackingTargetSPH"].IsVisible)
+                else
                 {
+                    ButtonStyle = AHUIStyling.ButtonDefault;
+                }                  
+                if (GUILayout.Button(Localizer.Format ("#autoLOC_AH_0017") + " " + Localizer.Format ("#autoLOC_AH_0019"),
+                        ButtonStyle))
+                {
+                    if (AHTrackingStation.TrackingStationWindows["TrackingTargetVAB"].IsVisible)
+                    {
+                        WindowInfo.CloseWindow("TrackingTargetVAB", AHTrackingStation.TrackingStationWindows);
+                    }
                     WindowInfo.CloseWindow("TrackingTargetSPH", AHTrackingStation.TrackingStationWindows);
+                    WindowInfo.ShowWindow("TrackingTargetVAB", AHTrackingStation.TrackingStationWindows);
+                        
                 }
-                WindowInfo.CloseWindow("TrackingTargetVAB", AHTrackingStation.TrackingStationWindows);
-                WindowInfo.ShowWindow("TrackingTargetSPH", AHTrackingStation.TrackingStationWindows);
-                    
+                if (AHTargetType.EDITORSPH == AHMapCircle.selectedShipType)
+                {
+                    ButtonStyle = AHUIStyling.ButtonSelected;
+                }
+                else
+                {
+                    ButtonStyle = AHUIStyling.ButtonDefault;
+                }                  
+                if (GUILayout.Button(Localizer.Format ("#autoLOC_AH_0017") + " " + Localizer.Format ("#autoLOC_AH_0020"),
+                        ButtonStyle))
+                {
+                    if (AHTrackingStation.TrackingStationWindows["TrackingTargetSPH"].IsVisible)
+                    {
+                        WindowInfo.CloseWindow("TrackingTargetSPH", AHTrackingStation.TrackingStationWindows);
+                    }
+                    WindowInfo.CloseWindow("TrackingTargetVAB", AHTrackingStation.TrackingStationWindows);
+                    WindowInfo.ShowWindow("TrackingTargetSPH", AHTrackingStation.TrackingStationWindows);
+                        
+                }
+                GUILayout.EndHorizontal();            
             }
-            GUILayout.EndHorizontal();            
-            
-            if (AHTrackingStation.activeVessel is null)
+            if (AHMapCircle.activeVessel.name is null)
             {
                 GUILayout.Label(/*nothing selected*/Localizer.Format("#autoLOC_AH_0075"),
                     AHUIStyling.BoldLabel);
@@ -88,43 +90,44 @@ namespace AntennaHelperNext
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(/*Selected Vessel*/Localizer.Format("#autoLOC_AH_0077") + " : ",
                     AHUIStyling.DefaultLabel, GUILayout.Width(widthFirstCol));
-                GUILayout.Label(/*Vessel Name*/AHTrackingStation.activeVessel.vesselName,
+                GUILayout.Label(/*Vessel Name*/AHMapCircle.activeVessel.name,
                     AHUIStyling.DefaultLabel);
                 GUILayout.EndHorizontal();  
+               
+                GUILayout.BeginHorizontal();
+                GUILayout.Label(/*Total Power*/Localizer.Format("#autoLOC_AH_0058") + " : ",
+                    AHUIStyling.DefaultLabel, GUILayout.Width(widthFirstCol));
+                GUILayout.Label(/*Vessel*/AHUtil.ToKMG(AHMapCircle.ActiveShipAntennas.VesselPower,decimalPlaces:2),
+                    AHUIStyling.DefaultLabel);
+                GUILayout.EndHorizontal();
                 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(/*Relay Power*/Localizer.Format("#autoLOC_AH_0057") + " : ",
                     AHUIStyling.DefaultLabel, GUILayout.Width(widthFirstCol));
-                GUILayout.Label(/*Vessel*/AHUtil.ToKMG(AHTrackingStation.ActiveShipAntennas.RelayPower,decimalPlaces:2),
+                GUILayout.Label(/*Vessel*/AHUtil.ToKMG(AHMapCircle.ActiveShipAntennas.RelayPower,decimalPlaces:2),
                     AHUIStyling.DefaultLabel);
-                GUILayout.EndHorizontal();
-                
-                GUILayout.BeginHorizontal();
-                GUILayout.Label(/*Total Power*/Localizer.Format("#autoLOC_AH_0058") + " : ",
-                    AHUIStyling.DefaultLabel, GUILayout.Width(widthFirstCol));
-                GUILayout.Label(/*Vessel*/AHUtil.ToKMG(AHTrackingStation.ActiveShipAntennas.VesselPower,decimalPlaces:2),
-                    AHUIStyling.DefaultLabel);
-                GUILayout.EndHorizontal();
+                GUILayout.EndHorizontal();                
                 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(/*Antennas extended*/Localizer.Format("#autoLOC_AH_0109") + " : ",
                     AHUIStyling.DefaultLabel, GUILayout.Width(widthFirstCol));
-                int antennacount = AHTrackingStation.ActiveShipAntennas.AntennasNotExtended.Count + AHTrackingStation.ActiveShipAntennas.VesselAntennas.Count;
+                int antennacount = AHMapCircle.ActiveShipAntennas.AntennasNotExtended.Count + AHMapCircle.ActiveShipAntennas.VesselAntennas.Count;
                 GUILayout.Label(/*count*/Localizer.Format("#autoLOC_AH_0110", new string[] {
-                        (antennacount - AHTrackingStation.ActiveShipAntennas.AntennasNotExtended.Count).ToString(),
+                        (antennacount - AHMapCircle.ActiveShipAntennas.AntennasNotExtended.Count).ToString(),
                         (antennacount).ToString()
                     }),
                     AHUIStyling.DefaultLabel);
                 GUILayout.EndHorizontal();                
             }
-            AHUIStyling.DrawSeparator();
-            GUILayout.Label(/*Selected Signal Strength*/Localizer.Format("#autoLOC_AH_0112") ,
-                AHUIStyling.DefaultLabel);
-            GUILayout.BeginHorizontal();
-            foreach (var item in AHUtil.SignalMultipliers) {
-                double strength = item.Key;
-                
-                if (AHMapCircle.selectedSignalStrength == strength)
+
+            if (AHMapCircle.inMapView)
+            {
+                // AntennaType
+                // GUILayout.Label(/*Selected Antenna*/Localizer.Format("#autoLOC_AH_0114") ,
+                //     AHUIStyling.DefaultLabel);
+                GUILayout.BeginHorizontal();
+                // ALL
+                if (AHAntennaType.ALL == AHMapCircle.selectedAntennaType)
                 {
                     ButtonStyle = AHUIStyling.ButtonSelected;
                 }
@@ -132,73 +135,116 @@ namespace AntennaHelperNext
                 {
                     ButtonStyle = AHUIStyling.ButtonDefault;
                 }
-				
-                if (GUILayout.Button(strength.ToString("N0"), ButtonStyle))
+
+                if (GUILayout.Button(Localizer.Format("#autoLOC_AH_0005"), ButtonStyle))
                 {
-                    AHMapCircle.selectedSignalStrength = strength;
+                    AHMapCircle.selectedAntennaType = AHAntennaType.ALL;
+                    AHMapCircle.UpdateBubbleRanges();
                 }
-            }            
-            GUILayout.EndHorizontal();         
-            AHUIStyling.DrawSeparator();
-            
-            // Button Active connection
-            if (AHDisplayType.ACTIVE == AHMapCircle.displayType)
-            {
-                ButtonStyle = AHUIStyling.ButtonSelected;
-            }
-            else
-            {
-                ButtonStyle = AHUIStyling.ButtonDefault;
-            }            
-            if (GUILayout.Button(Localizer.Format("#autoLOC_AH_0045"), ButtonStyle))
-            {
-                AHMapCircle.displayType = AHDisplayType.ACTIVE;
-                // TODO: Update GUI
-            }         
-            
-            // Button DSN connection
-            if (AHDisplayType.DSN == AHMapCircle.displayType)
-            {
-                ButtonStyle = AHUIStyling.ButtonSelected;
-            }
-            else
-            {
-                ButtonStyle = AHUIStyling.ButtonDefault;
-            }            
-            if (GUILayout.Button(Localizer.Format("#autoLOC_AH_0046"), ButtonStyle))
-            {
-                AHMapCircle.displayType = AHDisplayType.DSN;
-                // TODO: Update GUI
-            }       
-            
-            // Button RELAY connection
-            if (AHDisplayType.RELAY == AHMapCircle.displayType)
-            {
-                ButtonStyle = AHUIStyling.ButtonSelected;
-            }
-            else
-            {
-                ButtonStyle = AHUIStyling.ButtonDefault;
-            }            
-            if (GUILayout.Button(Localizer.Format("#autoLOC_AH_0048"), ButtonStyle))
-            {
-                AHMapCircle.displayType = AHDisplayType.RELAY;
-                // TODO: Update GUI
-            } 
-            
-            // Button DSN+RELAY connection
-            if (AHDisplayType.DSNRELAY == AHMapCircle.displayType)
-            {
-                ButtonStyle = AHUIStyling.ButtonSelected;
-            }
-            else
-            {
-                ButtonStyle = AHUIStyling.ButtonDefault;
-            }            
-            if (GUILayout.Button(Localizer.Format("#autoLOC_AH_0047"), ButtonStyle))
-            {
-                AHMapCircle.displayType = AHDisplayType.DSNRELAY;
-                // TODO: Update GUI
+
+                // Relay Antennas
+                if (AHAntennaType.RELAY == AHMapCircle.selectedAntennaType)
+                {
+                    ButtonStyle = AHUIStyling.ButtonSelected;
+                }
+                else
+                {
+                    ButtonStyle = AHUIStyling.ButtonDefault;
+                }
+
+                if (GUILayout.Button(Localizer.Format("#autoLOC_AH_0113"), ButtonStyle))
+                {
+                    AHMapCircle.selectedAntennaType = AHAntennaType.RELAY;
+                    AHMapCircle.UpdateBubbleRanges();
+                }
+
+                GUILayout.EndHorizontal();
+                AHUIStyling.DrawSeparator();
+                GUILayout.Label( /*Selected Signal Strength*/Localizer.Format("#autoLOC_AH_0112"),
+                    AHUIStyling.CenterLabel);
+                GUILayout.BeginHorizontal();
+                foreach (var item in AHUtil.SignalMultipliers)
+                {
+                    double strength = item.Key;
+
+                    if (AHMapCircle.selectedSignalStrength == strength)
+                    {
+                        ButtonStyle = AHUIStyling.ButtonSelected;
+                    }
+                    else
+                    {
+                        ButtonStyle = AHUIStyling.ButtonDefault;
+                    }
+
+                    if (GUILayout.Button(strength.ToString("N0"), ButtonStyle))
+                    {
+                        AHMapCircle.selectedSignalStrength = strength;
+                        AHMapCircle.UpdateBubbleRanges();
+                    }
+                }
+
+                GUILayout.EndHorizontal();
+                AHUIStyling.DrawSeparator();
+
+                // Button Active connection
+                if (AHDisplayType.ACTIVE == AHMapCircle.displayType)
+                {
+                    ButtonStyle = AHUIStyling.ButtonSelected;
+                }
+                else
+                {
+                    ButtonStyle = AHUIStyling.ButtonDefault;
+                }
+
+                if (GUILayout.Button(Localizer.Format("#autoLOC_AH_0045"), ButtonStyle))
+                {
+                    AHMapCircle.displayType = AHDisplayType.ACTIVE;
+                }
+
+                // Button DSN connection
+                if (AHDisplayType.DSN == AHMapCircle.displayType)
+                {
+                    ButtonStyle = AHUIStyling.ButtonSelected;
+                }
+                else
+                {
+                    ButtonStyle = AHUIStyling.ButtonDefault;
+                }
+
+                if (GUILayout.Button(Localizer.Format("#autoLOC_AH_0046"), ButtonStyle))
+                {
+                    AHMapCircle.displayType = AHDisplayType.DSN;
+                }
+
+                // Button RELAY connection
+                if (AHDisplayType.RELAY == AHMapCircle.displayType)
+                {
+                    ButtonStyle = AHUIStyling.ButtonSelected;
+                }
+                else
+                {
+                    ButtonStyle = AHUIStyling.ButtonDefault;
+                }
+
+                if (GUILayout.Button(Localizer.Format("#autoLOC_AH_0048"), ButtonStyle))
+                {
+                    AHMapCircle.displayType = AHDisplayType.RELAY;
+                }
+
+                // Button DSN+RELAY connection
+                if (AHDisplayType.DSNRELAY == AHMapCircle.displayType)
+                {
+                    ButtonStyle = AHUIStyling.ButtonSelected;
+                }
+                else
+                {
+                    ButtonStyle = AHUIStyling.ButtonDefault;
+                }
+
+                if (GUILayout.Button(Localizer.Format("#autoLOC_AH_0047"), ButtonStyle))
+                {
+                    AHMapCircle.displayType = AHDisplayType.DSNRELAY;
+                }
             }
             
             // DEBUG
@@ -248,7 +294,7 @@ namespace AntennaHelperNext
                 string strButton = vesselName + " (" + vesselPower + ")";
 
                 GUIStyle buttonStyle;
-                if (AHTrackingStation.activeVessel != null && AHTrackingStation.activeVessel.id == vid)
+                if (AHMapCircle.activeVessel.id == vid)
                 {
                     buttonStyle = AHUIStyling.ButtonSelected;
                 }
@@ -258,19 +304,18 @@ namespace AntennaHelperNext
                 }
 				
                 if (GUILayout.Button(strButton, buttonStyle)) {
-                    // create a new dummy vessel
-                    Vessel dummyVessel = new Vessel();
-                    dummyVessel.vesselName = vesselName;
-                    dummyVessel.id = vid;
-                    //dummyVessel.protoVessel.vesselID = new Guid(vid);
-                    dummyVessel.vesselType = VesselType.Unknown;
                     AHMapCircle.selectedShipType = AHTargetType.EDITORVAB;
-                    AHTrackingStation.activeVessel = dummyVessel;
-                    AHTrackingStation.ActiveShipAntennas = shipantennas;
+                    AHMapCircle.activeVessel = (vesselName, vid, null);
+                    AHMapCircle.ActiveShipAntennas = shipantennas;
                     
-                    // update commpath
-                    AHCommNet.GetCommPathVessels(dummyVessel, true);
-                    //TODO: update GUI
+                    // set to DSN if set to active
+                    if (AHMapCircle.displayType == AHDisplayType.ACTIVE)
+                    {
+                        AHMapCircle.displayType = AHDisplayType.DSN;
+                    }
+                    
+                    // update CommBubbles
+                    AHMapCircle.OnVesselChange();
                 }
             }
             GUILayout.EndScrollView ();
@@ -294,7 +339,7 @@ namespace AntennaHelperNext
                 string strButton = vesselName + " (" + vesselPower + ")";
 
                 GUIStyle buttonStyle;
-                if (AHTrackingStation.activeVessel != null && AHTrackingStation.activeVessel.id== vid)
+                if (AHMapCircle.activeVessel.id== vid)
                 {
                     buttonStyle = AHUIStyling.ButtonSelected;
                 }
@@ -304,18 +349,18 @@ namespace AntennaHelperNext
                 }
 				
                 if (GUILayout.Button(strButton, buttonStyle)) {
-                    // create a new dummy vessel
-                    Vessel dummyVessel = new Vessel();
-                    dummyVessel.vesselName = vesselName;
-                    dummyVessel.id = vid;
-                    dummyVessel.vesselType = VesselType.Unknown;
                     AHMapCircle.selectedShipType = AHTargetType.EDITORSPH;
-                    AHTrackingStation.activeVessel = dummyVessel;
-                    AHTrackingStation.ActiveShipAntennas = shipantennas;
+                    AHMapCircle.activeVessel = (vesselName, vid, null);
+                    AHMapCircle.ActiveShipAntennas = shipantennas;
+
+                    // set to DSN if set to active
+                    if (AHMapCircle.displayType == AHDisplayType.ACTIVE)
+                    {
+                        AHMapCircle.displayType = AHDisplayType.DSN;
+                    }
                     
-                    // update commpath
-                    AHCommNet.GetCommPathVessels(dummyVessel, true);
-                    //TODO: update GUI
+                    // update CommBubbles
+                    AHMapCircle.OnVesselChange();
                 }
             }
             GUILayout.EndScrollView ();
