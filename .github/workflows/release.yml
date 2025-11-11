@@ -4,6 +4,9 @@ on:
   release:
     types: [published]
 
+permissions:
+  contents: write  # ✅ allow uploading assets to releases
+
 jobs:
   package-folder:
     runs-on: ubuntu-latest
