@@ -25,6 +25,7 @@ Other than that it should work with most mods if they do not modify the calculat
 
 **DEPENDENCY :**
 * [Toolbar Controller](https://github.com/linuxgurugamer/ToolbarControl/releases)
+* [ClickThroughBlocker](https://github.com/linuxgurugamer/ClickThroughBlocker)
 
 ## Credits
 
