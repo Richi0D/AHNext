@@ -1,0 +1,28 @@
+﻿name: Release AntennaHelperNext
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  package-folder:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # ensures tags and full history for release builds
+
+      - name: Create ZIP of GameData/AntennaHelperNext
+        run: |
+          cd GameData
+          zip -r ../AntennaHelperNext.zip AntennaHelperNext
+          cd ..
+
+      - name: Upload ZIP as release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: AntennaHelperNext.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
