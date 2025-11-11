@@ -16,7 +16,7 @@ namespace AntennaHelperNext
         public static AHShipAntennas ActiveShipAntennas = new AHShipAntennas();
         public static List<ProtoVessel> activeCommPathVessels = new List<ProtoVessel>(); // save here the vessels from the commpath
         public static double DSNPower = 0;
-        //public static bool connectedToHome = false;
+        public static bool connectedToHome = false;
         public static bool directconnectedToHome = false;
         
         // Selector variables
@@ -29,10 +29,7 @@ namespace AntennaHelperNext
         // ParticleMeshes and Position Matrices for each entity
         public static (ParticleMesh mesh, Matrix4x4 matrix) DirectConDSNBubble;
         public static (ProtoVessel vessel, ParticleMesh mesh, Matrix4x4 matrix) FirstHopBubble; // this can be either the DSN or a relay vessel
-        public static (ParticleMesh mesh, Matrix4x4 matrix) ActiveVesselBubble; // only needed when the active vessel is an editor vessel
         public static List<(ProtoVessel vessel, ParticleMesh mesh, Matrix4x4 matrix)> RelayBubbles = new List<(ProtoVessel vessel, ParticleMesh mesh, Matrix4x4 matrix)>();
-        //public static List<(ProtoVessel vessel, ParticleMesh mesh, Matrix4x4 matrix)> ActiveRelayBubbles = new List<(ProtoVessel vessel, ParticleMesh mesh, Matrix4x4 matrix)>();
-
         
         // call this before whenever the scene is loaded
         public static void Init()
@@ -44,7 +41,6 @@ namespace AntennaHelperNext
             // init the single bubbles
             DirectConDSNBubble = (DefinedParticleMeshes.MediumCloud, Matrix4x4.identity);
             FirstHopBubble = (null, DefinedParticleMeshes.MediumCloud, Matrix4x4.identity);
-            ActiveVesselBubble = (DefinedParticleMeshes.MediumCloud, Matrix4x4.identity);
             InitRelayBubbles();
         }
         
@@ -78,35 +74,25 @@ namespace AntennaHelperNext
         // Get current commnet path and set bubbles
         public static void GetCommNetPathBubbles()
         {
-            
-            
-            //List<(ProtoVessel vessel, ParticleMesh mesh, Matrix4x4 matrix)> bubbles = new List<(ProtoVessel vessel, ParticleMesh mesh, Matrix4x4 matrix)>();
             if (activeVessel.vessel != null)
             {
                 activeCommPathVessels = AHCommNet.GetCommPathVessels(activeVessel.vessel);
+                // Debug.Log("Connected direct to home:" + directconnectedToHome);
+                // Debug.Log("Connected to anything:" + activeVessel.vessel.connection.IsConnected);
                 if (directconnectedToHome)
                 {
                     FirstHopBubble = (null, DefinedParticleMeshes.MediumCloud, Matrix4x4.identity);
                 }
                 else
                 {
-                    // get first ship on path
-                    ProtoVessel commnetVessel = activeCommPathVessels[0];
-                    FirstHopBubble = (commnetVessel, DefinedParticleMeshes.MediumCloud, Matrix4x4.identity);
+                    // get first ship on path, no vessels on path if not connected!
+                    if (activeVessel.vessel.connection.IsConnected)
+                    {
+                        ProtoVessel commnetVessel = activeCommPathVessels[0];
+                        FirstHopBubble = (commnetVessel, DefinedParticleMeshes.MediumCloud, Matrix4x4.identity);
+                    }
                 }
-                
-                // foreach (var commnetVessel in  activeCommPathVessels)
-                // {
-                //     bubbles.Add((commnetVessel, DefinedParticleMeshes.MediumCloud, Matrix4x4.identity));
-                // }
-                
-                // // if list is empty and we are connected to home, we have a direct connection to home
-                // if (activeCommPathVessels.Count == 0 && connectedToHome)
-                // {
-                //     
-                // }
             }
-            //ActiveRelayBubbles = bubbles;
         }
 
 
@@ -147,142 +133,44 @@ namespace AntennaHelperNext
                 }
                 else
                 {
-                    AHShipAntennas firstHopShipAntennas = AHShipList.FlightProtoShipList[FirstHopBubble.vessel];
-                    // this is first hop. so we can use all antennas or only relay antennas from active ship
-                    if (selectedAntennaType == AHAntennaType.ALL)
+                    if (activeVessel.vessel.connection.IsConnected)
                     {
-                        firstHopShipAntennas.UpdateRanges(ActiveShipAntennas.VesselPower);
+                        AHShipAntennas firstHopShipAntennas = AHShipList.FlightProtoShipList[FirstHopBubble.vessel];
+                        // this is first hop. so we can use all antennas or only relay antennas from active ship
+                        if (selectedAntennaType == AHAntennaType.ALL)
+                        {
+                            firstHopShipAntennas.UpdateRanges(ActiveShipAntennas.VesselPower);
+                        }
+                        else
+                        {
+                            firstHopShipAntennas.UpdateRanges(ActiveShipAntennas.RelayPower);
+                        }                    
+                        radiusBubble = firstHopShipAntennas.RelayRangesMax[selectedSignalStrength];
+                        FirstHopBubble.matrix = UpdateMatrix(FirstHopBubble.matrix, newRadius: radiusBubble);
                     }
-                    else
-                    {
-                        firstHopShipAntennas.UpdateRanges(ActiveShipAntennas.RelayPower);
-                    }                    
-                    radiusBubble = firstHopShipAntennas.RelayRangesMax[selectedSignalStrength];
-                    FirstHopBubble.matrix = UpdateMatrix(FirstHopBubble.matrix, newRadius: radiusBubble);
-                    
-                    // ProtoVessel previousVessel = null;
-                    // for (int i = 0; i < ActiveRelayBubbles.Count; i++) // just lets hope this is in correct order
-                    // {
-                    //     bool isFirst = (i == 0);
-                    //     bool isLast = (i == ActiveRelayBubbles.Count - 1);
-                    //     
-                    //     var bubble= ActiveRelayBubbles[i];
-                    //     ProtoVessel currentVessel = ActiveRelayBubbles[i].vessel;
-                    //     Matrix4x4 currentMatrix = ActiveRelayBubbles[i].matrix;
-                    //     AHShipAntennas currentShipAntennas = AHShipList.FlightProtoShipList[currentVessel];
-                    //     
-                    //     if (isFirst)
-                    //     {
-                    //         // this is first hop. so we can use all antennas or only relay antennas from active ship
-                    //         if (selectedAntennaType == AHAntennaType.ALL)
-                    //         {
-                    //             currentShipAntennas.UpdateRanges(ActiveShipAntennas.VesselPower);
-                    //         }
-                    //         else
-                    //         {
-                    //             currentShipAntennas.UpdateRanges(ActiveShipAntennas.RelayPower);
-                    //         }
-                    //         radiusBubble = currentShipAntennas.RelayRangesMax[selectedSignalStrength];
-                    //         bubble.matrix = UpdateMatrix(currentMatrix, newRadius: radiusBubble);
-                    //         ActiveRelayBubbles[i] = bubble;
-                    //     }
-                    //     if (isLast)  // first and last can be same vessel
-                    //     {
-                    //         // when it is last, this is usually connected to home. Update range for DSN
-                    //         currentShipAntennas.UpdateRanges(DSNPower);
-                    //         radiusBubble = homeBody.Radius + currentShipAntennas.RelayRangesMax[selectedSignalStrength];
-                    //         RelayConDSNBubble.matrix = UpdateMatrix(RelayConDSNBubble.matrix, newRadius: radiusBubble);
-                    //     }
-                    //     if (!isFirst && !isLast)
-                    //     {
-                    //         // in between relays
-                    //         if (previousVessel != null)
-                    //         {
-                    //             AHShipAntennas previousShipAntennas = AHShipList.FlightProtoShipList[previousVessel];
-                    //             currentShipAntennas.UpdateRanges(previousShipAntennas.RelayPower);
-                    //             radiusBubble = currentShipAntennas.RelayRangesMax[selectedSignalStrength];
-                    //             bubble.matrix = UpdateMatrix(currentMatrix, newRadius: radiusBubble);
-                    //             ActiveRelayBubbles[i] = bubble;                                
-                    //         }
-                    //     }
-                    //     previousVessel = currentVessel;
-                    // }
                 }
+            }
+            
+            
+            // Relay Bubbles
+            for (int i = 0; i < RelayBubbles.Count; i++)
+            {
+                var bubble = RelayBubbles[i];    
+                AHShipAntennas shipAntennas = AHShipList.FlightProtoShipList[bubble.vessel];
+                if (selectedAntennaType == AHAntennaType.ALL)
+                {
+                    shipAntennas.UpdateRanges(ActiveShipAntennas.VesselPower);
+                }
+                else
+                {
+                    shipAntennas.UpdateRanges(ActiveShipAntennas.RelayPower);
+                }
+                radiusBubble = shipAntennas.RelayRangesMax[selectedSignalStrength];
+                Matrix4x4 newMatrix = UpdateMatrix(bubble.matrix, newRadius: radiusBubble);
+                RelayBubbles[i] = (bubble.vessel, bubble.mesh, newMatrix);
             }
         }
         
-
-
-        // public static void UpdateBubbles()
-        // {
-        //     
-        //     if (selectedShipType != AHTargetType.EDITORSPH && 
-        //         selectedShipType != AHTargetType.EDITORVAB &&
-        //         (selectedShipType == AHTargetType.DSN || activeVessel.vessel == null))
-        //     {
-        //         // nothing selected, so no bubbles to show
-        //         DSNBubble = (null, Matrix4x4.identity);
-        //         ActiveVesselBubble = (null, Matrix4x4.identity);
-        //         RelayBubbles = new Dictionary<ProtoVessel, (ParticleMesh mesh, Matrix4x4 matrix)>();
-        //         connectionRelayBubbles = new Dictionary<ProtoVessel, (ParticleMesh mesh, Matrix4x4 matrix)>();
-        //         return;
-        //     }
-        //     
-        //     double radiusBubble = 0;
-        //     CelestialBody homeBody = FlightGlobals.GetHomeBody();
-        //     
-        //     // if (selectedShipType == AHTargetType.EDITORVAB || selectedShipType == AHTargetType.EDITORSPH)
-        //     // {
-        //     //     // editor ships
-        //     // }
-        //     
-        //     // DSN Bubble
-        //     DSNBubble.mesh = DefinedParticleMeshes.MediumCloud;
-        //     ActiveShipAntennas.UpdateRanges(DSNPower);
-        //     if (selectedAntennaType == AHAntennaType.ALL)
-        //     {
-        //         radiusBubble = homeBody.Radius + ActiveShipAntennas.VesselRangesMax[selectedSignalStrength];
-        //     }
-        //     else
-        //     {
-        //         radiusBubble = homeBody.Radius + ActiveShipAntennas.RelayRangesMax[selectedSignalStrength];
-        //     }
-        //     DSNBubble.matrix = Matrix4x4.TRS(
-        //         homeBody.position,
-        //         Quaternion.identity,
-        //         Vector3.one * (float)radiusBubble
-        //     );
-        //     
-        //     
-        //     // Active connection
-        //     connectionRelayBubbles = new Dictionary<ProtoVessel, (ParticleMesh mesh, Matrix4x4 matrix)>(); // when target get resetted
-        //     if (activeVessel.vessel != null)
-        //     {
-        //         activeCommPathVessels = AHCommNet.GetCommPathVessels(activeVessel.vessel);
-        //         foreach (ProtoVessel vessel in activeCommPathVessels)
-        //         {
-        //             AHShipAntennas shipantennas = new AHShipAntennas();
-        //             shipantennas.FetchAntennas(vessel.protoPartSnapshots, false);
-        //             if (selectedAntennaType == AHAntennaType.ALL)
-        //             {
-        //                 shipantennas.UpdateRanges(ActiveShipAntennas.VesselPower);
-        //                 radiusBubble = shipantennas.VesselRangesMax[selectedSignalStrength];
-        //             }
-        //             else
-        //             {
-        //                 shipantennas.UpdateRanges(ActiveShipAntennas.RelayPower);
-        //                 radiusBubble = shipantennas.RelayRangesMax[selectedSignalStrength];
-        //             }
-        //
-        //             connectionRelayBubbles[vessel] = (DefinedParticleMeshes.MediumCloud,
-        //                 DSNBubble.matrix = Matrix4x4.TRS(
-        //                     vessel.position,
-        //                     Quaternion.identity,
-        //                     Vector3.one * (float)radiusBubble
-        //                 ));
-        //         }                
-        //     }
-        // }
         
         public static void Render()
         {
@@ -290,8 +178,10 @@ namespace AntennaHelperNext
             if (selectedShipType != AHTargetType.FLIGHT && 
                 selectedShipType != AHTargetType.EDITORVAB && 
                 selectedShipType != AHTargetType.EDITORSPH) return;
-
- 
+            
+            // render only if we have relay power if relay is selected
+            if (selectedAntennaType == AHAntennaType.RELAY && ActiveShipAntennas.RelayPower <= 0) return;
+            
             
             // check mat type
             if (pointMat == null)
@@ -328,39 +218,34 @@ namespace AntennaHelperNext
             // update bubble positions
             UpdatePosition();
             
-            
             // render DSN if selected
-            if (
-                (// standard conditions
-                    displayType == AHDisplayType.DSN ||
-                    displayType == AHDisplayType.DSNRELAY
-                    ) && 
-                (// extra conditions to check
-                    !(selectedAntennaType == AHAntennaType.RELAY && ActiveShipAntennas.RelayPower <= 0)
-                    )
-                )
+            if (displayType == AHDisplayType.DSN ||
+                displayType == AHDisplayType.DSNRELAY)
             {
                 // always scale in render time to get correct camera scale!
                 DirectConDSNBubble.mesh.Render(ToScaledSpace(DirectConDSNBubble.matrix));
             }
-
-            
-            // // render nothing when set active and current vessel is not connected
-            // if(selectedShipType == AHTargetType.FLIGHT && 
-            //    displayType == AHDisplayType.ACTIVE && 
-            //    !activeVessel.vessel.connection.IsConnected) return;
             
             // render active connection and only on Flight ships.
             if (displayType == AHDisplayType.ACTIVE &&
-                selectedShipType == AHTargetType.FLIGHT)
+                selectedShipType == AHTargetType.FLIGHT &&
+                activeVessel.vessel != null && 
+                activeVessel.vessel.connection.IsConnected)
             {
-                // the firsthop we only should render if we have relay power if relay is selected
-                if (!(selectedAntennaType == AHAntennaType.RELAY && ActiveShipAntennas.RelayPower <= 0))
+                FirstHopBubble.mesh.Render(ToScaledSpace(FirstHopBubble.matrix));
+            }
+            
+            // render relay bubbles
+            if (displayType == AHDisplayType.RELAY ||
+                displayType == AHDisplayType.DSNRELAY)
+            {
+                foreach (var bubble in RelayBubbles)
                 {
-                    FirstHopBubble.mesh.Render(ToScaledSpace(FirstHopBubble.matrix));
-                }
+                    bubble.mesh.Render(ToScaledSpace(bubble.matrix));
+                }               
             }
         }
+        
         
         public static Matrix4x4 ToScaledSpace(Matrix4x4 worldMatrix)
         {
@@ -418,7 +303,6 @@ namespace AntennaHelperNext
             CelestialBody homeBody = FlightGlobals.GetHomeBody();
             DirectConDSNBubble.matrix = UpdateMatrix(DirectConDSNBubble.matrix, newWorldPos: homeBody.position);
             
-            
             // Active Connection
             if (directconnectedToHome)
             {
@@ -434,43 +318,14 @@ namespace AntennaHelperNext
                 }
             }
             
-            
-            //Vector3 radiusBubble = Vector3.zero;
-            // radiusBubble = new Vector3(
-            //     DirectConDSNBubble.matrix.GetColumn(0).magnitude,
-            //     DirectConDSNBubble.matrix.GetColumn(1).magnitude,
-            //     DirectConDSNBubble.matrix.GetColumn(2).magnitude
-            // );
-            // DirectConDSNBubble.matrix = Matrix4x4.TRS(
-            //     homeBody.position,
-            //     Quaternion.identity,
-            //     Vector3.one * radiusBubble.x
-            // ); 
-            
-            // // Active connection
-            // var updates = new List<(ProtoVessel key, (ParticleMesh mesh, Matrix4x4 matrix) val)>();
-            // foreach (var kvp in connectionRelayBubbles)
-            // {
-            //     Matrix4x4 relayMatrix = kvp.Value.matrix;
-            //     radiusBubble = new Vector3(
-            //         relayMatrix.GetColumn(0).magnitude,
-            //         relayMatrix.GetColumn(1).magnitude,
-            //         relayMatrix.GetColumn(2).magnitude
-            //     );
-            //     // get new position
-            //     Vessel v = kvp.Key.vesselRef;
-            //     Matrix4x4 newMat = Matrix4x4.TRS(
-            //         v.GetWorldPos3D(),
-            //         Quaternion.identity,
-            //         Vector3.one * radiusBubble.x
-            //     );    
-            //     updates.Add((kvp.Key, (kvp.Value.mesh, newMat)));
-            // }
-            // // Apply changes after iteration
-            // foreach (var u in updates)
-            // {
-            //     connectionRelayBubbles[u.key] = u.val;
-            // }
+            // Relay Bubbles
+            for (int i = 0; i < RelayBubbles.Count; i++)
+            {
+                var bubble = RelayBubbles[i];    
+                Vessel v = bubble.vessel.vesselRef;
+                Matrix4x4 newMatrix = UpdateMatrix(bubble.matrix, newWorldPos: v.GetWorldPos3D());
+                RelayBubbles[i] = (bubble.vessel, bubble.mesh, newMatrix);
+            }
         }       
     }        
 }

@@ -11,21 +11,6 @@ namespace AntennaHelperNext
     [KSPAddon(KSPAddon.Startup.Flight, false)]
     public class AHFlight : MonoBehaviour
     {
-        // Flight variables for GUI
-		public static float trackingStationLevel;
-		public static double DSNPower = 0;
-		// Target variables
-		public static AHDisplayType displayType = AHDisplayType.ACTIVE;
-		// Vessel variables
-		public static Vessel activeVessel;
-		public static AHShipAntennas ActiveShipAntennas = new AHShipAntennas();
-		public static List<ProtoVessel> activeCommPathVessels; // save here the vessels from the commpath
-		
-		//debugging
-		public static double debugSignalStrength = 0;
-		public static string debugPath = "";
-		public static CommPath debugCommPath;
-
 		public void Start()
 		{
 			if ((!HighLogic.CurrentGame.Parameters.CustomParams<AntennaHelperGameSettings> ().enableInFlight) 
@@ -34,11 +19,6 @@ namespace AntennaHelperNext
 				return;
 			}
 			
-			// init flight variables for GUI
-			trackingStationLevel = ScenarioUpgradeableFacilities.GetFacilityLevel (SpaceCenterFacility.TrackingStation);
-			DSNPower = GameVariables.Instance.GetDSNRange (trackingStationLevel);
-			displayType = AHDisplayType.ACTIVE;
-
 			// Toolbar
 			GameEvents.onGUIApplicationLauncherReady.Add(AddToolbarButton);
 			GameEvents.onGUIApplicationLauncherDestroyed.Add(RemoveToolbarButton);			
@@ -47,33 +27,44 @@ namespace AntennaHelperNext
 			AHShipList.UpdateShipLists();
 			// get all planets
 			AHPlanetList.LoadPlanetList();
-			AHMapCircle.inMapView = false;
+			
+			// Cloud points
+			DefinedParticleMeshes.Init(); // init mesh before circles!
+			AHMapCircle.Init();
 			
 			// fetch active Vessel and Antennas
-			GetActiveVessel();
-			ActiveShipAntennas.UpdateRanges(DSNPower);			
+			AHMapCircle.inMapView = false;
+			GetActiveVessel();	
 			
 			GameEvents.onVesselWasModified.Add (VesselModified);
 			GameEvents.onVesselChange.Add (VesselSwitch);
 			GameEvents.onVesselDestroy.Add (VesselDestroy);
+			GameEvents.CommNet.OnCommStatusChange.Add(CommNetUpdate);
 
 			GameEvents.OnMapEntered.Add(EnteringMap);
 			GameEvents.OnMapExited.Add(ExitingMap);
 			
 			GameEvents.onGameSceneSwitchRequested.Add(QuitEditor);
+			
+			// Hook into rendering
+			Camera.onPostRender += OnPostRenderCam;			
 		}
 
 
 		public void OnDestroy()
 		{
+			// Remove Hook into rendering
+			Camera.onPostRender -= OnPostRenderCam;
+			
 			// Toolbar
 			GameEvents.onGUIApplicationLauncherReady.Remove (AddToolbarButton);
 			GameEvents.onGUIApplicationLauncherDestroyed.Remove (RemoveToolbarButton);
 			RemoveToolbarButton();
 			
-			GameEvents.onVesselWasModified.Remove (VesselModified);
+			GameEvents.onVesselWasModified.Remove (VesselModified); // fires also on docking and undocking
 			GameEvents.onVesselChange.Remove (VesselSwitch);
 			GameEvents.onVesselDestroy.Remove (VesselDestroy);
+			GameEvents.CommNet.OnCommStatusChange.Remove(CommNetUpdate);
 
 			GameEvents.OnMapEntered.Remove(EnteringMap);
 			GameEvents.OnMapExited.Remove(ExitingMap);
@@ -83,6 +74,27 @@ namespace AntennaHelperNext
 			AntennaHelperSettings.Save();
 			Destroy(this);
 		}
+		
+		
+		private void OnPostRenderCam(Camera cam)
+		{
+			// Draw when Button is active
+			if (FlightWindows.ContainsKey("FlightMain"))
+			{
+				if (!FlightWindows["FlightMain"].IsVisible) return;
+			}
+			
+			// Draw only in Map View
+			if (!MapView.MapIsEnabled || HighLogic.LoadedScene == GameScenes.SPACECENTER)
+				return;
+			
+			// Only draw in planetarium (Tracking Station) camera
+			if (cam != PlanetariumCamera.Camera) return;
+			
+			// Draw circles
+			AHMapCircle.Render();
+		}
+		
 		
 		public void Update ()
 		{
@@ -104,14 +116,29 @@ namespace AntennaHelperNext
 		
 		public void GetActiveVessel()
 		{
-			activeVessel = FlightGlobals.ActiveVessel;
-			ActiveShipAntennas = new AHShipAntennas(); // create new instance, otherwise we overwrite another one.
-			ActiveShipAntennas.FetchAntennas(activeVessel.Parts, false);
-			//activeCommPathVessels = AHCommNet.GetCommPathVessels(activeVessel);
+			Vessel v = FlightGlobals.ActiveVessel;
+			if (v != null)
+			{
+				AHMapCircle.activeVessel = (v.vesselName, v.id, v);
+				AHMapCircle.ActiveShipAntennas = new AHShipAntennas(); // create new instance, otherwise we overwrite another one.
+				AHMapCircle.ActiveShipAntennas.FetchAntennas(AHMapCircle.activeVessel.vessel.parts, false);
+				AHMapCircle.selectedShipType = AHTargetType.FLIGHT;
+				AHMapCircle.OnVesselChange();
+			}
+			else
+			{
+				AHMapCircle.activeVessel = (null, Guid.Empty, null);
+				AHMapCircle.ActiveShipAntennas = new AHShipAntennas();
+				AHMapCircle.selectedShipType = AHTargetType.DSN; // we just set it to DSN, because we don't have a vessel selected.
+				AHMapCircle.OnVesselChange();
+			}
 		}
 		
 		private void VesselModified (Vessel v = null)
 		{
+			// when undocking and docking the vessel list might change with new or removed relays. So update all
+			AHShipList.UpdateShipLists(doSavedShips: false);
+			AHMapCircle.InitRelayBubbles(); // update the bubbles for new relays
 			GetActiveVessel();
 		}
 		
@@ -128,14 +155,26 @@ namespace AntennaHelperNext
 				return;
 			}
 			
-			if (v == activeVessel) {
+			if (v == AHMapCircle.activeVessel.vessel) {
 				Debug.Log ("[AH] the active vessel is destroyed");
 				Destroy (this);
 				return;
 			}
 			// any other vessel is destroyed, update the list of vessels
 			AHShipList.UpdateShipLists();
-		}			
+		}	
+		
+		private void CommNetUpdate (Vessel v, bool b)
+		{
+			// i guess we only need an update when the active vessel changes commnet
+			if (AHMapCircle.activeVessel.vessel != null &&
+			    v != null &&
+			    AHMapCircle.activeVessel.vessel == v)
+			{
+				AHMapCircle.OnVesselChange();
+			}
+		}		
+		
 		
 		public void QuitEditor (GameEvents.FromToAction<GameScenes, GameScenes> eData)
 		{
@@ -150,8 +189,8 @@ namespace AntennaHelperNext
 			new Dictionary<ModuleDeployableAntenna, ModuleDeployablePart.DeployState>();
 		public void AntennaStateWatcher()
 		{
-			if (activeVessel == null) return;
-			foreach (var antenna in activeVessel.FindPartModulesImplementing<ModuleDeployableAntenna>())
+			if (AHMapCircle.activeVessel.vessel == null) return;
+			foreach (var antenna in AHMapCircle.activeVessel.vessel.FindPartModulesImplementing<ModuleDeployableAntenna>())
 			{
 				var currentState = antenna.deployState;
 				if (!lastStates.TryGetValue(antenna, out var prevState))
@@ -164,7 +203,9 @@ namespace AntennaHelperNext
 				{
 					lastStates[antenna] = currentState;
 					// since we filter extended antennas on part level, we need to update the whole antenna list
-					ActiveShipAntennas.FetchAntennas(activeVessel.parts, false);
+					AHMapCircle.ActiveShipAntennas.FetchAntennas(AHMapCircle.activeVessel.vessel.parts, false);
+					// also update ranges
+					AHMapCircle.UpdateBubbleRanges();
 				}
 			}
 		}		
@@ -177,7 +218,7 @@ namespace AntennaHelperNext
 	        { "FlightMain", new WindowInfo(
 		        835862,
 		        new Rect(AntennaHelperSettings.WindowPositions["flight_main_window_position"], new Vector2(250, 150)),
-		        AHFlightWindows.MainWindow,
+		        AHTrackingStationWindows.MainWindow,
 		        Localizer.Format ("#autoLOC_AH_0001"),
 		        saveKey:"flight_main_window_position")
 	        }

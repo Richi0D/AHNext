@@ -138,15 +138,18 @@ namespace AntennaHelperNext
             return vesselDict;
         }
 
-        public static void UpdateShipLists()
+        public static void UpdateShipLists(bool doSavedShips = true)
         {
-            EditorShipListVAB.Clear();
-            EditorShipListSPH.Clear();
+            if (doSavedShips)
+            {
+                EditorShipListVAB.Clear();
+                EditorShipListSPH.Clear();
+                EditorShipListVAB = GetAllSavedShips(VABSavePath);
+                EditorShipListSPH = GetAllSavedShips(SPHSavePath);
+            }
+            
             FlightShipList.Clear();
             FlightProtoShipList.Clear();
-
-            EditorShipListVAB = GetAllSavedShips(VABSavePath);
-            EditorShipListSPH = GetAllSavedShips(SPHSavePath);
             // FlightShipList = GetAllFlyingVessels(); // this does not get part infos from unloaded vessels, we use the protovessels
             FlightProtoShipList = GetAllFlyingProtoVessels();
         }

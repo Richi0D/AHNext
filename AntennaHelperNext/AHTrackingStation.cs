@@ -29,19 +29,19 @@ namespace AntennaHelperNext
 			// get all planets
 			AHPlanetList.LoadPlanetList();   			
 			
+			// Cloud points
+			DefinedParticleMeshes.Init(); // init mesh before circles!
+			AHMapCircle.Init();
+			
 			// fetch active Vessel and Antennas
 			AHMapCircle.inMapView = true;
 			GetActiveVessel();
 			
 			GameEvents.onPlanetariumTargetChanged.Add(NewTarget);
-			//GameEvents.OnMapFocusChange.Add(NewTarget);
-			GameEvents.onVesselDestroy.Add (VesselDestroy);
-			// GameEvents.CommNet.OnCommStatusChange.Add(CommNetUpdate);
-			GameEvents.onGameSceneSwitchRequested.Add (QuitEditor);
-			
-			// Cloud points
-			DefinedParticleMeshes.Init(); // init mesh before circles!
-			AHMapCircle.Init();
+			//GameEvents.OnMapFocusChange.Add(NewTarget); // this doubles the onPlanetariumTargetChanged
+			GameEvents.onVesselDestroy.Add(VesselDestroy);
+			GameEvents.CommNet.OnCommStatusChange.Add(CommNetUpdate);
+			GameEvents.onGameSceneSwitchRequested.Add(QuitEditor);
 			
 			// Hook into rendering
 			Camera.onPostRender += OnPostRenderCam;
@@ -78,7 +78,7 @@ namespace AntennaHelperNext
 			GameEvents.onPlanetariumTargetChanged.Remove(NewTarget);
 			//GameEvents.OnMapFocusChange.Remove(NewTarget);
 			GameEvents.onVesselDestroy.Remove(VesselDestroy);
-			// GameEvents.CommNet.OnCommStatusChange.Remove(CommNetUpdate);
+			GameEvents.CommNet.OnCommStatusChange.Remove(CommNetUpdate);
 			
 			GameEvents.onGameSceneSwitchRequested.Remove (QuitEditor);
 			// save positions and at last destroy the instance
@@ -113,8 +113,19 @@ namespace AntennaHelperNext
 			{
 				GetActiveVessel();
 			}
-			
 		}
+		
+		private void CommNetUpdate (Vessel v, bool b)
+		{
+			// i guess we only need an update when the active vessel changes commnet
+			if (AHMapCircle.activeVessel.vessel != null &&
+			    v != null &&
+				AHMapCircle.activeVessel.vessel == v)
+			{
+				AHMapCircle.OnVesselChange();
+			}
+		}
+		
 		
 		private void VesselDestroy (Vessel v = null)
 		{
@@ -154,7 +165,7 @@ namespace AntennaHelperNext
 		        new Rect (new Vector2 (
 				        AntennaHelperSettings.WindowPositions["tracking_station_main_window_position"].x-250, 
 				        AntennaHelperSettings.WindowPositions["tracking_station_main_window_position"].y)
-			        , new Vector2 (250, 200)),
+			        , new Vector2 (260, 200)),
 		        AHTrackingStationWindows.ShipListWindowVAB,
 		        Localizer.Format ("#autoLOC_AH_0017") + " " + Localizer.Format ("#autoLOC_AH_0019"),
 		        parentWindow: "TrackingMain",
@@ -167,7 +178,7 @@ namespace AntennaHelperNext
 		        new Rect (new Vector2 (
 				        AntennaHelperSettings.WindowPositions["tracking_station_main_window_position"].x-250, 
 				        AntennaHelperSettings.WindowPositions["tracking_station_main_window_position"].y)
-			        , new Vector2 (250, 200)),
+			        , new Vector2 (260, 200)),
 		        AHTrackingStationWindows.ShipListWindowSPH,
 		        Localizer.Format ("#autoLOC_AH_0017") + " " + Localizer.Format ("#autoLOC_AH_0020"),
 		        parentWindow: "TrackingMain",

@@ -317,7 +317,7 @@ namespace AntennaHelperNext
 			{
 				ButtonStyle = AHUIStyling.ButtonDefault;
 			}
-			if (GUILayout.Button (/*Editor Ships*/Localizer.Format ("#autoLOC_AH_0105"), ButtonStyle)) {
+			if (GUILayout.Button (/*Editor Ships*/Localizer.Format ("#autoLOC_AH_0019"), ButtonStyle)) {
 				//AntennaHelperEditor.CloseWindow("EditorTarget");
 				WindowInfo.CloseWindow("EditorTargetShipFlight", AntennaHelperEditor.EditorWindows);
 				WindowInfo.CloseWindow("EditorTargetPart", AntennaHelperEditor.EditorWindows);
@@ -333,7 +333,7 @@ namespace AntennaHelperNext
 			{
 				ButtonStyle = AHUIStyling.ButtonDefault;
 			}
-			if (GUILayout.Button (/*Editor Ships*/Localizer.Format ("#autoLOC_AH_0106"), ButtonStyle)) {
+			if (GUILayout.Button (/*Editor Ships*/Localizer.Format ("#autoLOC_AH_0020"), ButtonStyle)) {
 				//AntennaHelperEditor.CloseWindow("EditorTarget");
 				WindowInfo.CloseWindow("EditorTargetShipFlight", AntennaHelperEditor.EditorWindows);
 				WindowInfo.CloseWindow("EditorTargetPart", AntennaHelperEditor.EditorWindows);

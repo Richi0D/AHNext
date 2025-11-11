@@ -15,16 +15,15 @@ namespace AntennaHelperNext
                 // no path for editor vessel or no vessel selected
                 return vesselsOnPath;
             }
-            //AHMapCircle.connectedToHome = false; // reset
+            AHMapCircle.connectedToHome = false; // reset
             AHMapCircle.directconnectedToHome = false; // reset
 			
             // a CommPath has multiple links each link is a CommLink, A is source, B is destination
             CommPath commpath = vessel.connection.ControlPath;
-            // Debug.Log ("[AH] commpath : " + commpath);
-            // debugSignalStrength = vessel.connection.SignalStrength;
-			
             foreach (CommLink link in commpath)
             {
+                // Debug.Log ("[AH] Vessel a on commpath : " + link.a.displayName);
+                // Debug.Log ("[AH] Vessel b on commpath : " + link.b.displayName);
                 // get Vessel
                 Vessel v = link.a.transform.GetComponent<Vessel>();
                 if (v != null && v.id != vessel.id)
@@ -36,18 +35,20 @@ namespace AntennaHelperNext
                     	{
                     		vesselsOnPath.Add(kvp.Key);
                     	}
-                    }	                    
+                    }
                 }
+                
                 if (v !=null && v.id == vessel.id)
                 {
                     // check and save if we are directly connected to home
                     AHMapCircle.directconnectedToHome = link.b.isHome;
                 }
                 
-                // if (link.b.isHome)
-                // {
-                //     AHMapCircle.connectedToHome = true;
-                // }               
+                if (link.b.isHome)
+                {
+                    // any vessel on the path is connected to home
+                    AHMapCircle.connectedToHome = true;
+                }
             }
             
             // the length should be always smaller than 1 from the CommPath (exclude current vessel)

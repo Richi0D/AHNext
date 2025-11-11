@@ -13,18 +13,48 @@ namespace AntennaHelperNext
         // Close button for all windows
         private static void DrawCloseButton(string windowName)
         {
-            var winInfo = AHTrackingStation.TrackingStationWindows[windowName];
-            var rect = new Rect(winInfo.Position.width - 22, 2, 20, 18);
-
-            if (GUI.Button(rect, "X"))
+            if (HighLogic.LoadedScene == GameScenes.TRACKSTATION)
             {
-                WindowInfo.CloseWindow(windowName, AHTrackingStation.TrackingStationWindows);
+                var winInfo = AHTrackingStation.TrackingStationWindows[windowName];
+                var rect = new Rect(winInfo.Position.width - 22, 2, 20, 18);
+
+                if (GUI.Button(rect, "X"))
+                {
+                    WindowInfo.CloseWindow(windowName, AHTrackingStation.TrackingStationWindows);
+                }
+            }
+            else if (HighLogic.LoadedScene == GameScenes.FLIGHT)
+            {
+                var winInfo = AHFlight.FlightWindows[windowName];
+                var rect = new Rect(winInfo.Position.width - 22, 2, 20, 18);
+
+                if (GUI.Button(rect, "X"))
+                {
+                    WindowInfo.CloseWindow(windowName, AHFlight.FlightWindows);
+                }                
+            }
+            else
+            {
+                Debug.Log("[AH] Scene not supported. Can not draw close button.");               
             }
         }
-
+        
         public static void MainWindow(int id)
         {
-            float widthFirstCol = AHTrackingStation.TrackingStationWindows["TrackingMain"].Position.width * .45f;
+            float widthFirstCol = 100f;
+            if (HighLogic.LoadedScene == GameScenes.TRACKSTATION)
+            {
+                widthFirstCol = AHTrackingStation.TrackingStationWindows["TrackingMain"].Position.width * .45f;
+            }
+            else if (HighLogic.LoadedScene == GameScenes.FLIGHT)
+            {
+                widthFirstCol = AHFlight.FlightWindows["FlightMain"].Position.width * .45f;
+            }
+            else
+            {
+                Debug.Log("[AH] Scene not supported. Wrong width for columns.");               
+            }
+            
             GUIStyle ButtonStyle = AHUIStyling.ButtonDefault;
 
             // Close Button, Use toolbarcontroller to close window
