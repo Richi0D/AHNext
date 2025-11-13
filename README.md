@@ -18,12 +18,12 @@ It fixed various issues the original mod had.
 ![trackingstation](https://github.com/Richi0D/AHNext/blob/main/pics/trackingstation.png?raw=true)
 
 
-## Compatilibity
+## Compatibility
 
 Not compatible with the original mod. Uninstall the original mod before installing this one.
 Other than that it should work with most mods if they do not modify the calculation of the antenna ranges. 
 
-**DEPENDENCY :**
+**DEPENDENCY:**
 * [Toolbar Controller](https://github.com/linuxgurugamer/ToolbarControl/releases)
 * [ClickThroughBlocker](https://github.com/linuxgurugamer/ClickThroughBlocker)
 

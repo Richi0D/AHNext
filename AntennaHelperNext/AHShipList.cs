@@ -32,7 +32,7 @@ namespace AntennaHelperNext
         //     FlightProtoShipList = GetAllFlyingProtoVessels();
         // }
 
-        public static Dictionary<(string name, Guid vID), AHShipAntennas> GetAllSavedShips(string folderPath)
+        public static Dictionary<(string name, Guid vID), AHShipAntennas> GetAllSavedShips(string folderPath, bool onlyRelayShips = true)
         {
             Dictionary<(string name, Guid vID), AHShipAntennas> shipFiles =
                 new Dictionary<(string name, Guid vID), AHShipAntennas>();
@@ -56,9 +56,18 @@ namespace AntennaHelperNext
                         Guid shipID = Guid.NewGuid(); // we need a new GUID for each ship
 
                         AHShipAntennas shipAntennas = GetAntennasFromCraftFile(craftFile);
+                        // always do relays
                         if (shipAntennas.RelayPower > 0)
                         {
                             shipFiles.Add((shipname, shipID), shipAntennas);
+                        }
+                        else
+                        {
+                            // only do non-relay ships if there are antennas
+                            if (!onlyRelayShips && shipAntennas.VesselAntennas.Count > 0)
+                            {
+                                shipFiles.Add((shipname, shipID), shipAntennas);
+                            }
                         }
                     }
                     catch (Exception e)
@@ -138,14 +147,14 @@ namespace AntennaHelperNext
             return vesselDict;
         }
 
-        public static void UpdateShipLists(bool doSavedShips = true)
+        public static void UpdateShipLists(bool doSavedShips = true, bool editorOnlyRelayShips = true)
         {
             if (doSavedShips)
             {
                 EditorShipListVAB.Clear();
                 EditorShipListSPH.Clear();
-                EditorShipListVAB = GetAllSavedShips(VABSavePath);
-                EditorShipListSPH = GetAllSavedShips(SPHSavePath);
+                EditorShipListVAB = GetAllSavedShips(VABSavePath, editorOnlyRelayShips);
+                EditorShipListSPH = GetAllSavedShips(SPHSavePath, editorOnlyRelayShips);
             }
             
             FlightShipList.Clear();

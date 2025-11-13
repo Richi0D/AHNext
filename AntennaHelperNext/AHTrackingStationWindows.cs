@@ -320,7 +320,7 @@ namespace AntennaHelperNext
                 AHShipAntennas shipantennas = item.Value;
                 string vesselName = item.Key.name;
                 Guid vid = item.Key.vID;
-                string vesselPower = AHUtil.ToKMG(shipantennas.RelayPower, false, 2);
+                string vesselPower = AHUtil.ToKMG(shipantennas.VesselPower, false, 2);
                 string strButton = vesselName + " (" + vesselPower + ")";
 
                 GUIStyle buttonStyle;
@@ -365,7 +365,7 @@ namespace AntennaHelperNext
                 AHShipAntennas shipantennas = item.Value;
                 string vesselName = item.Key.name;
                 Guid vid = item.Key.vID;
-                string vesselPower = AHUtil.ToKMG(shipantennas.RelayPower, false, 2);
+                string vesselPower = AHUtil.ToKMG(shipantennas.VesselPower, false, 2);
                 string strButton = vesselName + " (" + vesselPower + ")";
 
                 GUIStyle buttonStyle;

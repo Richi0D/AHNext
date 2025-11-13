@@ -25,7 +25,7 @@ namespace AntennaHelperNext
 			GameEvents.onGUIApplicationLauncherDestroyed.Add(RemoveToolbarButton);			
 			
 			// get all flying and editor vessels
-			AHShipList.UpdateShipLists();
+			AHShipList.UpdateShipLists(editorOnlyRelayShips: false);
 			// get all planets
 			AHPlanetList.LoadPlanetList();   			
 			
@@ -137,7 +137,7 @@ namespace AntennaHelperNext
 				Debug.Log ("[AH] the active vessel is destroyed");
 			}
 			// any other vessel is destroyed, update the list of vessels
-			AHShipList.UpdateShipLists();
+			AHShipList.UpdateShipLists(editorOnlyRelayShips: false);
 			GetActiveVessel();
 		}			
 		
