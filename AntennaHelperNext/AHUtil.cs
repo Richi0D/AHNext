@@ -97,7 +97,8 @@ namespace AntennaHelperNext
             {25, 0.6736481776670189 },
             {50, 0.5 },
             {75, 0.3263518223329811 },
-            {100, 0.04140015071607195 } // is 99.5%
+            //{100, 0.04140015071607195 } // is 99.5%
+			{100, 0.058903135777654825 } // is 99%
         };
         public static Dictionary<double, double> GetDistancesBySignalFixed(double maxRange)
         {

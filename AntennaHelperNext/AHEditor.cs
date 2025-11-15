@@ -58,6 +58,7 @@ namespace AntennaHelperNext
             GameEvents.onEditorUndo.Add (EditorUndo);
             
             GameEvents.onGameSceneSwitchRequested.Add (QuitEditor);
+            
         }
         
         // onDestroy is called when the instance is being destroyed

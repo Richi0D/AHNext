@@ -113,6 +113,12 @@ namespace AntennaHelperNext
                 {
                     win.Position.position = ExtendWindowPos(parentWin.Position, win.Position, win.LockLower);
                 }
+
+                if (kv.Key == "FlightMain")
+                {
+                    // reset size for flight main window, map window is always bigger so we need to return to original height
+                    win.Position.height = 150;
+                }
 				
                 win.Position = ClickThruBlocker.GUILayoutWindow(
                     win.ID,          // You can assign a unique int per window in EditorWindowInfo

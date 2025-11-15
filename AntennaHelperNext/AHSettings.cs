@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Reflection;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using ToolbarControl_NS;
 using KSP.Localization;
@@ -47,6 +48,7 @@ namespace AntennaHelperNext
 		public static Texture signalPerDistanceTex;
 		public static float uiScale;
 		public static Texture2D separatorTex;
+		public static bool usingKerbalism = false;
 
 		void Start()
 		{
@@ -57,6 +59,15 @@ namespace AntennaHelperNext
 			uiScale = GameSettings.UI_SCALE;
 			// create texture for gui seperator
 			InitSeparatorTex();
+			// check for Kerbalism
+			if (AssemblyLoader.loadedAssemblies.Any(a => a.assembly.GetName().Name == "Kerbalism"))
+			{
+				usingKerbalism = true;
+			}
+			else
+			{
+				usingKerbalism = false;
+			}
 		}
 		
 		public static void InitSeparatorTex()
