@@ -91,6 +91,7 @@ namespace AntennaHelperNext
             }
         }
 
+        private static float lastMinWindowHeightFlight = 200;
         public static void onGuiWindow(Dictionary<string, WindowInfo> winDictonary)
         {
             // set Skin
@@ -114,10 +115,12 @@ namespace AntennaHelperNext
                     win.Position.position = ExtendWindowPos(parentWin.Position, win.Position, win.LockLower);
                 }
 
-                if (kv.Key == "FlightMain")
+                if (kv.Key == "FlightMain" && !AHMapCircle.inMapView
+                    && win.Position.height > lastMinWindowHeightFlight)
                 {
+                    // it is a bit of a dirty fix
                     // reset size for flight main window, map window is always bigger so we need to return to original height
-                    win.Position.height = 150;
+                    win.Position.height = 200;
                 }
 				
                 win.Position = ClickThruBlocker.GUILayoutWindow(

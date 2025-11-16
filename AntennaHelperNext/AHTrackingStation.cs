@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using KSP.Localization;
 using ToolbarControl_NS;
@@ -46,6 +47,7 @@ namespace AntennaHelperNext
 			// Hook into rendering
 			Camera.onPostRender += OnPostRenderCam;
         }
+		
 		
 		private void OnPostRenderCam(Camera cam)
 		{
@@ -94,6 +96,8 @@ namespace AntennaHelperNext
 				AHMapCircle.activeVessel = (target.vessel.vesselName, target.vessel.id, target.vessel);
 				AHMapCircle.ActiveShipAntennas = new AHShipAntennas(); // create new instance, otherwise we overwrite another one.
 				AHMapCircle.ActiveShipAntennas.FetchAntennas(AHMapCircle.activeVessel.vessel.protoVessel.protoPartSnapshots, false);
+				//StartCoroutine(AHUtil.UpdateKerbalismRateNextFrame(target.vessel)); // For Kerbalism get antenna rates
+				AHMapCircle.ActiveShipAntennas.GetKerbalismRate(target.vessel);
 				AHMapCircle.selectedShipType = AHTargetType.FLIGHT;
 				AHMapCircle.OnVesselChange();
 			}
@@ -163,7 +167,7 @@ namespace AntennaHelperNext
 	        { "TrackingTargetVAB", new WindowInfo(
 		        415656,
 		        new Rect (new Vector2 (
-				        AntennaHelperSettings.WindowPositions["tracking_station_main_window_position"].x-250, 
+				        AntennaHelperSettings.WindowPositions["tracking_station_main_window_position"].x-260, 
 				        AntennaHelperSettings.WindowPositions["tracking_station_main_window_position"].y)
 			        , new Vector2 (260, 200)),
 		        AHTrackingStationWindows.ShipListWindowVAB,
@@ -176,7 +180,7 @@ namespace AntennaHelperNext
 	        { "TrackingTargetSPH", new WindowInfo(
 		        568736,
 		        new Rect (new Vector2 (
-				        AntennaHelperSettings.WindowPositions["tracking_station_main_window_position"].x-250, 
+				        AntennaHelperSettings.WindowPositions["tracking_station_main_window_position"].x-260, 
 				        AntennaHelperSettings.WindowPositions["tracking_station_main_window_position"].y)
 			        , new Vector2 (260, 200)),
 		        AHTrackingStationWindows.ShipListWindowSPH,

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace AntennaHelperNext
 {
@@ -185,6 +187,63 @@ namespace AntennaHelperNext
                 return (value / 1_000f).ToString($"F{decimalPlaces}") + suffixes[0];         // k / km
             else
                 return value.ToString($"F{decimalPlaces}");                                   // no suffix
-        }        
+        } 
+        
+        
+        public const double bitsPerMB = 1000.0 * 1000.0 * 8.0;
+        public const double bPerMB = 1000.0 * 1000.0 * 8;
+        public const double BPerMB = 1000.0 * 1000.0;
+        public const double kBPerMB = 1000.0;
+        public const double GBPerMB = 1.0 / 1000.0;
+        public const double TBPerMB = 1.0 / (1000.0 * 1000.0);
+        public const double MBPerBitTenth = 1.0 / (1000.0 * 1000.0 * 10.0 * 8.0);
+        public const double MBPerB = 1.0 / (1000.0 * 1000.0);
+        public const double MBPerkB = 1.0 / 1000.0;
+        public const double MBPerGB = 1000.0;
+        public const double MBPerTB = 1000.0 * 1000.0;
+        ///<summary> Format data rate, the rate parameter is in MB/s </summary>
+        public static string HumanReadableDataRate(double rate)
+        {
+            if (rate < MBPerBitTenth)  // min rate is 0.1 bit/s
+                return "n/a";
+            if (rate < MBPerB)
+                return (rate * bPerMB).ToString("0.0 b/s");
+            if (rate < MBPerkB)
+                return (rate * BPerMB).ToString("0.0 B/s");
+            if (rate < 1.0)
+                return (rate * kBPerMB).ToString("0.00 kB/s");
+            if (rate < MBPerGB)
+                return rate.ToString("0.00 MB/s");
+            if (rate < MBPerTB)
+                return (rate * GBPerMB).ToString("0.00 GB/s");
+
+            return (rate * TBPerMB).ToString("0.00 TB/s");
+        }
+        
+        
+        public static IEnumerator UpdateKerbalismRateNextFrame(Vessel v)
+        {
+            if (!KerbalismApi.usingKerbalism || v == null)
+                yield break;
+
+            double oldRate = KerbalismApi.KerbalismConnectionRate(v);
+
+            // Wait until Kerbalism produces a different rate
+            for (int i = 0; i < 30; i++) // max ~0.5 seconds
+            {
+                yield return new WaitForFixedUpdate();
+                double newRate = KerbalismApi.KerbalismConnectionRate(v);
+                if (Math.Abs(newRate - oldRate) > 0.0000001)
+                {
+                    AHMapCircle.ActiveShipAntennas.KerbalismRate = newRate;
+                    yield break;
+                }
+            }
+
+            // fallback: still update once
+            AHMapCircle.ActiveShipAntennas.KerbalismRate =
+                KerbalismApi.KerbalismConnectionRate(v);
+        }
+        
     }
 }

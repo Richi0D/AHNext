@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Reflection;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +18,40 @@ namespace AntennaHelperNext
 			ToolbarControl.RegisterMod(AntennaHelperEditor.MODID, Localizer.Format(AntennaHelperEditor.MODNAME));
 		}
 	}
+	
+	
+	// Kerbalism loader
+	[KSPAddon(KSPAddon.Startup.SpaceCentre, true)]
+	public class KerbalismApi : MonoBehaviour
+	{
+		public static bool usingKerbalism = false;
+		public static Func<Vessel , double> KerbalismConnectionRate;
+		void Start()
+		{
+			// Find the Kerbalism assembly by name (KerbalismBootstrap loads it dynamically)
+			var kerbalismAssembly = AppDomain.CurrentDomain.GetAssemblies()
+				.FirstOrDefault(a => a.GetName().Name == "Kerbalism");
+
+			if (kerbalismAssembly == null)
+			{
+				Debug.Log("[AH] Kerbalism assembly not found!");
+				usingKerbalism = false;
+				return;
+			}
+			// Now get the API type from the correct assembly
+			var apiType = kerbalismAssembly.GetType("KERBALISM.API");
+			if (apiType == null)
+			{
+				Debug.LogError("[AH] Kerbalism API class not found in Kerbalism assembly!");
+				usingKerbalism = false;
+				return;
+			}
+			
+			KerbalismConnectionRate = (Func<Vessel , double>)Delegate.CreateDelegate(typeof(Func<Vessel , double>), apiType.GetMethod("VesselConnectionRate"));
+			usingKerbalism = true;
+		}
+	}	
+	
 
 	public class AHColors
 	{
@@ -48,7 +83,7 @@ namespace AntennaHelperNext
 		public static Texture signalPerDistanceTex;
 		public static float uiScale;
 		public static Texture2D separatorTex;
-		public static bool usingKerbalism = false;
+		
 
 		void Start()
 		{
@@ -59,15 +94,6 @@ namespace AntennaHelperNext
 			uiScale = GameSettings.UI_SCALE;
 			// create texture for gui seperator
 			InitSeparatorTex();
-			// check for Kerbalism
-			if (AssemblyLoader.loadedAssemblies.Any(a => a.assembly.GetName().Name == "Kerbalism"))
-			{
-				usingKerbalism = true;
-			}
-			else
-			{
-				usingKerbalism = false;
-			}
 		}
 		
 		public static void InitSeparatorTex()

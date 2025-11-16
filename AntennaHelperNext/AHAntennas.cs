@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Linq;
 using System.Collections.Generic;
 using CommNet;
@@ -23,7 +24,9 @@ namespace AntennaHelperNext
         public Dictionary<double, double> RelayRangesMax;
         public Dictionary<string, (double minVesselSignal, double maxVesselSignal, double minRelaySignal, double
             maxRelaySignal)> PlanetSignalStrengths;
+        public double KerbalismRate = 0;
 
+        
         public AHShipAntennas()
         {
             // init planet signal strengths
@@ -306,6 +309,13 @@ namespace AntennaHelperNext
             }
         }
         
-        
+        public void GetKerbalismRate(Vessel v)
+        {
+            if (KerbalismApi.usingKerbalism && v != null)
+            {
+                KerbalismRate = KerbalismApi.KerbalismConnectionRate(v);
+                //Debug.Log($"[AH] Kerbalism Connection Rate: {AHUtil.HumanReadableDataRate(rate)}");
+            }
+        }
     }
 }

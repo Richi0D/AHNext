@@ -127,8 +127,19 @@ namespace AntennaHelperNext
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(/*Total Power*/Localizer.Format("#autoLOC_AH_0058") + " : ",
                     AHUIStyling.DefaultLabel, GUILayout.Width(widthFirstCol));
-                GUILayout.Label(/*Vessel*/AHUtil.ToKMG(AHMapCircle.ActiveShipAntennas.VesselPower,decimalPlaces:2),
-                    AHUIStyling.DefaultLabel);
+                // create string for total power and kerbalism rate
+                string vesselPower;
+                if (KerbalismApi.usingKerbalism)
+                {
+                    vesselPower = AHUtil.ToKMG(AHMapCircle.ActiveShipAntennas.VesselPower, decimalPlaces: 2) +
+                                  "\n(" + AHUtil.HumanReadableDataRate(AHMapCircle.ActiveShipAntennas.KerbalismRate) +
+                                  ")";
+                }
+                else
+                {
+                    vesselPower = AHUtil.ToKMG(AHMapCircle.ActiveShipAntennas.VesselPower,decimalPlaces:2);
+                }
+                GUILayout.Label(/*Vessel*/vesselPower, AHUIStyling.DefaultLabel);
                 GUILayout.EndHorizontal();
                 
                 GUILayout.BeginHorizontal();

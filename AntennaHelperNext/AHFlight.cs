@@ -47,7 +47,8 @@ namespace AntennaHelperNext
 			GameEvents.onGameSceneSwitchRequested.Add(QuitEditor);
 			
 			// Hook into rendering
-			Camera.onPostRender += OnPostRenderCam;			
+			Camera.onPostRender += OnPostRenderCam;
+
 		}
 
 
@@ -96,11 +97,22 @@ namespace AntennaHelperNext
 		}
 		
 		
-		public void Update ()
+		// physics update
+		public void FixedUpdate()
 		{
 			if (FlightWindows["FlightMain"].IsVisible)
 			{
 				AntennaStateWatcher();
+				
+				// Kerbalism antenna rate calculation laggs a bit behind, so we frequently check it here
+				if (KerbalismApi.usingKerbalism)
+				{
+					Vessel v = FlightGlobals.ActiveVessel;
+					if (v != null)
+					{
+						AHMapCircle.ActiveShipAntennas.GetKerbalismRate(v);
+					}
+				}				
 			}
 		}
 		
@@ -181,7 +193,7 @@ namespace AntennaHelperNext
 			AntennaHelperSettings.Save();
 			foreach (var win in FlightWindows.Keys)
 				WindowInfo.CloseWindow(win, FlightWindows);
-		}		
+		}
 		
 		
 		// watch for antenna state changes and update the list of antennas
@@ -208,8 +220,7 @@ namespace AntennaHelperNext
 					AHMapCircle.UpdateBubbleRanges();
 				}
 			}
-		}		
-		
+		}
 		
         #region GUI
         // window positions
