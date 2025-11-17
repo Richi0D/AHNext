@@ -449,7 +449,7 @@ namespace AntennaHelperNext
 			
 			GUILayout.BeginVertical ();
 			scrollVectorFlight = GUILayout.BeginScrollView (scrollVectorFlight);
-			foreach (var item in AHShipList.FlightProtoShipList) {
+			foreach (var item in AHShipList.EditorFlightShips) {
 				ProtoVessel vessel = item.Key;
 				AHShipAntennas shipantennas = item.Value;
 				

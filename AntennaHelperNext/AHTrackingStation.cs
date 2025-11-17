@@ -41,6 +41,7 @@ namespace AntennaHelperNext
 			GameEvents.onPlanetariumTargetChanged.Add(NewTarget);
 			//GameEvents.OnMapFocusChange.Add(NewTarget); // this doubles the onPlanetariumTargetChanged
 			GameEvents.onVesselDestroy.Add(VesselDestroy);
+			GameEvents.onVesselTerminated.Add(ProtoVesselDestroyed);
 			GameEvents.CommNet.OnCommStatusChange.Add(CommNetUpdate);
 			GameEvents.onGameSceneSwitchRequested.Add(QuitEditor);
 			
@@ -80,6 +81,7 @@ namespace AntennaHelperNext
 			GameEvents.onPlanetariumTargetChanged.Remove(NewTarget);
 			//GameEvents.OnMapFocusChange.Remove(NewTarget);
 			GameEvents.onVesselDestroy.Remove(VesselDestroy);
+			GameEvents.onVesselTerminated.Remove(ProtoVesselDestroyed);
 			GameEvents.CommNet.OnCommStatusChange.Remove(CommNetUpdate);
 			
 			GameEvents.onGameSceneSwitchRequested.Remove (QuitEditor);
@@ -130,18 +132,16 @@ namespace AntennaHelperNext
 			}
 		}
 		
+		private void ProtoVesselDestroyed(ProtoVessel pv)
+		{
+			VesselDestroy();
+		}
 		
 		private void VesselDestroy (Vessel v = null)
 		{
-			if (v == null) {
-				Debug.Log ("[AH] a null vessel is destroyed");
-			}
-			
-			if (v == AHMapCircle.activeVessel.vessel) {
-				Debug.Log ("[AH] the active vessel is destroyed");
-			}
 			// any other vessel is destroyed, update the list of vessels
 			AHShipList.UpdateShipLists(editorOnlyRelayShips: false);
+			AHMapCircle.InitRelayBubbles();
 			GetActiveVessel();
 		}			
 		

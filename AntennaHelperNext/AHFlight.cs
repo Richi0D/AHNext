@@ -36,7 +36,10 @@ namespace AntennaHelperNext
 			AHMapCircle.inMapView = false;
 			GetActiveVessel();	
 			
-			GameEvents.onVesselWasModified.Add (VesselModified);
+			GameEvents.onVesselCreate.Add(Vesselcreated);
+			//GameEvents.onVesselWasModified.Add (VesselModified); // fires also on docking and undocking
+			GameEvents.onVesselDocking.Add(Vesseldocked);
+			// GameEvents.onVesselsUndocking.Add(Vesselundocked);
 			GameEvents.onVesselChange.Add (VesselSwitch);
 			GameEvents.onVesselDestroy.Add (VesselDestroy);
 			GameEvents.CommNet.OnCommStatusChange.Add(CommNetUpdate);
@@ -62,7 +65,10 @@ namespace AntennaHelperNext
 			GameEvents.onGUIApplicationLauncherDestroyed.Remove (RemoveToolbarButton);
 			RemoveToolbarButton();
 			
-			GameEvents.onVesselWasModified.Remove (VesselModified); // fires also on docking and undocking
+			GameEvents.onVesselCreate.Remove(Vesselcreated);
+			// GameEvents.onVesselWasModified.Remove (VesselModified); // fires also on docking and undocking
+			GameEvents.onVesselDocking.Remove(Vesseldocked);
+			// GameEvents.onVesselsUndocking.Remove(Vesselundocked);
 			GameEvents.onVesselChange.Remove (VesselSwitch);
 			GameEvents.onVesselDestroy.Remove (VesselDestroy);
 			GameEvents.CommNet.OnCommStatusChange.Remove(CommNetUpdate);
@@ -145,19 +151,56 @@ namespace AntennaHelperNext
 				AHMapCircle.OnVesselChange();
 			}
 		}
-		
-		private void VesselModified (Vessel v = null)
+
+		private void Vesseldocked(uint v1, uint v2)
 		{
-			// when undocking and docking the vessel list might change with new or removed relays. So update all
+			VesselModified();
+		}
+		
+		// private void Vesselundocked(Vessel v1, Vessel v2)
+		// {
+		// 	VesselModified();
+		// }
+		
+		private void Vesselcreated(Vessel v)
+		{
+			VesselModified();
+		}
+		
+		
+		private bool vesselUpdateQueued = false;
+		private void VesselModified(Vessel v = null)
+		{
+			// Already queued? Don't schedule again.
+			if (vesselUpdateQueued)
+				return;
+			
+			vesselUpdateQueued = true;
+			StartCoroutine(UpdateVesselDataDelayed());
+		}
+		
+		private IEnumerator UpdateVesselDataDelayed()
+		{
+			// // wait until proto list catches up
+			// while (HighLogic.CurrentGame.flightState.protoVessels.Count 
+			//        != FlightGlobals.Vessels.Count)
+			// {
+			// 	yield return null;
+			// }
+			yield return new WaitForFixedUpdate();
+			yield return null;
+			
+			// there could be any new or removed vessels
 			AHShipList.UpdateShipLists(doSavedShips: false);
-			AHMapCircle.InitRelayBubbles(); // update the bubbles for new relays
+			AHMapCircle.InitRelayBubbles();
 			GetActiveVessel();
+			vesselUpdateQueued = false;
 		}
 		
 		private void VesselSwitch (Vessel v)
 		{
 			GetActiveVessel();
-		}		
+		}	
 		
 		private void VesselDestroy (Vessel v = null)
 		{
@@ -174,7 +217,8 @@ namespace AntennaHelperNext
 			}
 			// any other vessel is destroyed, update the list of vessels
 			AHShipList.UpdateShipLists(doSavedShips: false);
-		}	
+			AHMapCircle.InitRelayBubbles();
+		}
 		
 		private void CommNetUpdate (Vessel v, bool b)
 		{
@@ -216,6 +260,11 @@ namespace AntennaHelperNext
 					lastStates[antenna] = currentState;
 					// since we filter extended antennas on part level, we need to update the whole antenna list
 					AHMapCircle.ActiveShipAntennas.FetchAntennas(AHMapCircle.activeVessel.vessel.parts, false);
+					// if the ship is in the relay list, we need to update the Shipantennas
+					if (AHShipList.FlightShipList.ContainsKey(AHMapCircle.activeVessel.vessel))
+					{
+						AHShipList.FlightShipList[AHMapCircle.activeVessel.vessel] = AHMapCircle.ActiveShipAntennas;
+					}
 					// also update ranges
 					AHMapCircle.UpdateBubbleRanges();
 				}

@@ -7,9 +7,9 @@ namespace AntennaHelperNext
     public static class AHCommNet
     {
         
-        public static List<ProtoVessel> GetCommPathVessels(Vessel vessel, bool isEditorVessel=false)
+        public static List<Vessel> GetCommPathVessels(Vessel vessel, bool isEditorVessel=false)
         {
-            List<ProtoVessel> vesselsOnPath = new List<ProtoVessel>();
+            List<Vessel> vesselsOnPath = new List<Vessel>();
             if (vessel == null || isEditorVessel)
             {
                 // no path for editor vessel or no vessel selected
@@ -29,9 +29,9 @@ namespace AntennaHelperNext
                 if (v != null && v.id != vessel.id)
                 {
                     // find matching vessel from Flightlist
-                    foreach (var kvp in AHShipList.FlightProtoShipList)
+                    foreach (var kvp in AHShipList.FlightShipList)
                     {
-                    	if (kvp.Key.vesselID == v.protoVessel.vesselID)
+                    	if (kvp.Key.id == v.id)
                     	{
                     		vesselsOnPath.Add(kvp.Key);
                     	}

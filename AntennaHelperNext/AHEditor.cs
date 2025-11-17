@@ -5,6 +5,7 @@ using UnityEngine;
 using KSP.Localization;
 using ToolbarControl_NS;
 using ClickThroughFix;
+using KSP.UI.Screens;
 
 namespace AntennaHelperNext
 {
@@ -41,7 +42,7 @@ namespace AntennaHelperNext
             GameEvents.onGUIApplicationLauncherDestroyed.Add (RemoveToolbarButton);
             
             // get all flying and editor vessels
-            AHShipList.UpdateShipLists();
+            AHShipList.UpdateShipLists(editorOnlyRelayShips: true);
             AHShipList.GetAntennaPartList();
             // get all planets
             AHPlanetList.LoadPlanetList();            
@@ -56,6 +57,7 @@ namespace AntennaHelperNext
             GameEvents.onEditorPodPicked.Add (PodPicked);
             GameEvents.onEditorPodDeleted.Add (PodDeleted);
             GameEvents.onEditorUndo.Add (EditorUndo);
+            GameEvents.onEditorRedo.Add (EditorUndo);
             
             GameEvents.onGameSceneSwitchRequested.Add (QuitEditor);
             
@@ -75,6 +77,7 @@ namespace AntennaHelperNext
             GameEvents.onEditorPodPicked.Remove (PodPicked);
             GameEvents.onEditorPodDeleted.Remove (PodDeleted);
             GameEvents.onEditorUndo.Remove (EditorUndo);
+            GameEvents.onEditorRedo.Remove (EditorUndo);
             
             GameEvents.onGameSceneSwitchRequested.Remove (QuitEditor);
             // save positions and at last destroy the instance
@@ -82,10 +85,6 @@ namespace AntennaHelperNext
             Destroy(this);
         }
         
-        // Update is called once per frame
-        public void Update ()
-        {
-        }
         
         public void QuitEditor (GameEvents.FromToAction<GameScenes, GameScenes> eData)
         {
@@ -96,7 +95,10 @@ namespace AntennaHelperNext
         
         public void VesselLoad (ShipConstruct ship, KSP.UI.Screens.CraftBrowserDialog.LoadType screenType)
         {
-	        RefreshAntennas();
+	        if (screenType == CraftBrowserDialog.LoadType.Normal)
+	        {
+		        RefreshAntennas();
+	        }
         }
         public void PodDeleted ()
         {
@@ -120,52 +122,48 @@ namespace AntennaHelperNext
         
         public void PartEvent (ConstructionEventType eventType, Part part)
         {
-	        
 	        if (part == null) return;
 	        if (eventType != ConstructionEventType.PartAttached && eventType != ConstructionEventType.PartDetached)
 		        return;
 	        
-	        // we only need to change the list if it actually has a ModuleDataTransmitter
-	        var transmitters = part.FindModulesImplementing<ModuleDataTransmitter>();
-	        if (transmitters == null || transmitters.Count == 0)
-		        return;
-	        
 	        if (eventType == ConstructionEventType.PartAttached)
 	        {
-		        EditorShipAntennas.AddAntenna(part);
-		        // Symmetry counterparts
-		        foreach (Part symPart in part.symmetryCounterparts)
-		        {
-			        EditorShipAntennas.AddAntenna(symPart);
-		        }
-		        // Child part
-		        foreach (Part childPart in part.children)
-		        {
-			        EditorShipAntennas.AddAntenna(childPart);
-		        }
+		        AddPartAndDescendants(part);
 	        }
 
 	        if (eventType == ConstructionEventType.PartDetached)
 	        {
-		        EditorShipAntennas.RemoveAntenna(part);
-		        // Symmetry counterparts
-		        foreach (ModuleDataTransmitter antennaSym in EditorShipAntennas.VesselAntennas.ToList())
-		        {
-			        if (antennaSym.part.isSymmetryCounterPart(part))
-			        {
-				        EditorShipAntennas.RemoveAntenna(antennaSym);
-			        }
-		        }
-		        // Child part
-		        foreach (Part childPart in part.children)
-		        {
-			        EditorShipAntennas.RemoveAntenna(childPart);
-		        }
+		        RemovePartAndDescendants(part);
 	        }
 	        EditorShipAntennas.UpdateAntennas();
 	        EditorShipAntennas.UpdateRanges(selectedTarget.targetPower);
 	        UpdateCustomRange(EditorCustomRange.customDistance);
         }
+        
+        private void AddPartAndDescendants(Part p)
+        {
+	        EditorShipAntennas.AddAntenna(p);
+	        // Add symmetry counterparts
+	        foreach (Part sym in p.symmetryCounterparts)
+		        EditorShipAntennas.AddAntenna(sym);
+
+	        // Add children recursively
+	        foreach (Part c in p.children)
+		        AddPartAndDescendants(c);
+        }
+        
+        private void RemovePartAndDescendants(Part p)
+        {
+	        EditorShipAntennas.RemoveAntenna(p);
+	        // Add symmetry counterparts
+	        foreach (Part sym in p.symmetryCounterparts)
+		        EditorShipAntennas.RemoveAntenna(sym);
+
+	        // Add children recursively
+	        foreach (Part c in p.children)
+		        RemovePartAndDescendants(c);
+        }
+        
 
         public static void UpdateCustomRange(double range)
         {

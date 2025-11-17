@@ -16,10 +16,8 @@ namespace AntennaHelperNext
         public static Dictionary<(string name, Guid vID), AHShipAntennas> EditorShipListSPH =
             new Dictionary<(string name, Guid vID), AHShipAntennas>();
 
+        public static Dictionary<ProtoVessel, AHShipAntennas> EditorFlightShips =new Dictionary<ProtoVessel, AHShipAntennas>(); 
         public static Dictionary<Vessel, AHShipAntennas> FlightShipList = new Dictionary<Vessel, AHShipAntennas>();
-
-        public static Dictionary<ProtoVessel, AHShipAntennas> FlightProtoShipList =
-            new Dictionary<ProtoVessel, AHShipAntennas>();
 
         public static Dictionary<string, ModuleDataTransmitter> AntennaPartList =
             new Dictionary<string, ModuleDataTransmitter>();
@@ -109,18 +107,34 @@ namespace AntennaHelperNext
                                                             (v.vesselType != VesselType.SpaceObject) &&
                                                             (v.vesselType != VesselType.Unknown) &&
                                                             (v.vesselType != VesselType.Debris));
-
+            
             // fetch antennas for each vessel
             foreach (Vessel vessel in vesselList)
             {
                 AHShipAntennas shipAntennas = new AHShipAntennas();
-                shipAntennas.FetchAntennas(vessel.parts);
+                // catch vessel parts in a smart way, unloaded vessels we need to catch from protovessel
+                if (vessel.loaded)
+                {
+                    shipAntennas.FetchAntennas(vessel.parts);
+                }
+                else
+                {
+                    ProtoVessel pv = vessel.protoVessel;
+                    if (pv != null)
+                    {
+                        shipAntennas.FetchAntennas(pv.protoPartSnapshots);
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"[AntennaHelper] vessel {vessel.vesselName} has no protovessel");
+                    }
+                }
+                
                 if (shipAntennas.RelayPower > 0)
                 {
                     vesselDict.Add(vessel, shipAntennas);
                 }
             }
-
             return vesselDict;
         }
 
@@ -133,7 +147,7 @@ namespace AntennaHelperNext
                 (v.vesselType != VesselType.SpaceObject) &&
                 (v.vesselType != VesselType.Unknown) &&
                 (v.vesselType != VesselType.Debris));
-
+            
             // fetch antennas for each vessel
             foreach (ProtoVessel vessel in vesselList)
             {
@@ -157,10 +171,16 @@ namespace AntennaHelperNext
                 EditorShipListSPH = GetAllSavedShips(SPHSavePath, editorOnlyRelayShips);
             }
             
-            FlightShipList.Clear();
-            FlightProtoShipList.Clear();
-            // FlightShipList = GetAllFlyingVessels(); // this does not get part infos from unloaded vessels, we use the protovessels
-            FlightProtoShipList = GetAllFlyingProtoVessels();
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                EditorFlightShips.Clear();
+                EditorFlightShips = GetAllFlyingProtoVessels();
+            }
+            else
+            {
+                FlightShipList.Clear();
+                FlightShipList = GetAllFlyingVessels();
+            }
         }
 
         public static void GetAntennaPartList()
