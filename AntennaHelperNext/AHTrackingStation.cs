@@ -6,6 +6,7 @@ using UnityEngine;
 using KSP.Localization;
 using ToolbarControl_NS;
 using CommNet;
+using System.Diagnostics;
 
 namespace AntennaHelperNext
 {
@@ -13,8 +14,20 @@ namespace AntennaHelperNext
 	public class AHTrackingStation : MonoBehaviour
 	{
 		
+		private void Timed(string label, Action action)
+		{
+			Stopwatch sw = Stopwatch.StartNew();
+			action();
+			sw.Stop();
+			UnityEngine.Debug.Log($"[AH] {label} took {sw.ElapsedMilliseconds} ms");
+		}
+		
+		
 		public void Start()
 		{
+			
+			Stopwatch sw = Stopwatch.StartNew();
+			
 			if (!HighLogic.CurrentGame.Parameters.CustomParams<AntennaHelperGameSettings>().enableInTrackingStation)
 			{
 				Destroy(this);
@@ -25,18 +38,24 @@ namespace AntennaHelperNext
 			GameEvents.onGUIApplicationLauncherReady.Add(AddToolbarButton);
 			GameEvents.onGUIApplicationLauncherDestroyed.Add(RemoveToolbarButton);			
 			
-			// get all flying and editor vessels
-			AHShipList.UpdateShipLists(editorOnlyRelayShips: false);
-			// get all planets
-			AHPlanetList.LoadPlanetList();   			
+			// // get all flying and editor vessels
+			// AHShipList.UpdateShipLists(editorOnlyRelayShips: false);
+			// // get all planets
+			// AHPlanetList.LoadPlanetList();   			
+			//
+			// // Cloud points
+			// DefinedParticleMeshes.Init(); // init mesh before circles!
+			// AHMapCircle.Init();
 			
-			// Cloud points
-			DefinedParticleMeshes.Init(); // init mesh before circles!
-			AHMapCircle.Init();
+			Timed("UpdateShipLists", () => AHShipList.UpdateShipLists(false));
+			Timed("LoadPlanetList", () => AHPlanetList.LoadPlanetList());
+			Timed("Init Particle Mesh", () => DefinedParticleMeshes.Init());
+			Timed("MapCircle.Init", () => AHMapCircle.Init());
 			
 			// fetch active Vessel and Antennas
 			AHMapCircle.inMapView = true;
-			GetActiveVessel();
+			//GetActiveVessel();
+			Timed("GetActiveVessel", () => GetActiveVessel());
 			
 			GameEvents.onPlanetariumTargetChanged.Add(NewTarget);
 			//GameEvents.OnMapFocusChange.Add(NewTarget); // this doubles the onPlanetariumTargetChanged
@@ -46,6 +65,9 @@ namespace AntennaHelperNext
 			
 			// Hook into rendering
 			Camera.onPostRender += OnPostRenderCam;
+			
+			sw.Stop();
+			UnityEngine.Debug.Log($"[AH] Start() took {sw.ElapsedMilliseconds} ms");
         }
 		
 		
@@ -69,6 +91,8 @@ namespace AntennaHelperNext
 
 		public void OnDestroy()
 		{
+			Stopwatch sw = Stopwatch.StartNew();
+			
 			// Remove Hook into rendering
 			Camera.onPostRender -= OnPostRenderCam;
 			
@@ -85,7 +109,11 @@ namespace AntennaHelperNext
 			GameEvents.onGameSceneSwitchRequested.Remove (QuitEditor);
 			// save positions and at last destroy the instance
 			AntennaHelperSettings.Save();
-			Destroy(this);
+			
+			//Destroy(this);
+			
+			sw.Stop();
+			UnityEngine.Debug.Log($"[AH] Destroy() took {sw.ElapsedMilliseconds} ms");
 		}
 		
 		public void GetActiveVessel()
@@ -134,11 +162,11 @@ namespace AntennaHelperNext
 		private void VesselDestroy (Vessel v = null)
 		{
 			if (v == null) {
-				Debug.Log ("[AH] a null vessel is destroyed");
+				UnityEngine.Debug.Log ("[AH] a null vessel is destroyed");
 			}
 			
 			if (v == AHMapCircle.activeVessel.vessel) {
-				Debug.Log ("[AH] the active vessel is destroyed");
+				UnityEngine.Debug.Log ("[AH] the active vessel is destroyed");
 			}
 			// any other vessel is destroyed, update the list of vessels
 			AHShipList.UpdateShipLists(editorOnlyRelayShips: false);
