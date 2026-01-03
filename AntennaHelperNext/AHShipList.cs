@@ -101,16 +101,22 @@ namespace AntennaHelperNext
         public static Dictionary<Vessel, AHShipAntennas> GetAllFlyingVessels()
         {
             Dictionary<Vessel, AHShipAntennas> vesselDict = new Dictionary<Vessel, AHShipAntennas>();
-            List<Vessel> vesselList = new List<Vessel>();
-            vesselList = FlightGlobals.Vessels.FindAll(v => (v.vesselType != VesselType.EVA) &&
-                                                            (v.vesselType != VesselType.Flag) &&
-                                                            (v.vesselType != VesselType.SpaceObject) &&
-                                                            (v.vesselType != VesselType.Unknown) &&
-                                                            (v.vesselType != VesselType.Debris));
-            
+
+			var vessels = FlightGlobals.Vessels;
+			if (vessels == null) return vesselDict;
+
             // fetch antennas for each vessel
-            foreach (Vessel vessel in vesselList)
+            foreach (var vessel in vessels.ToArray())
             {
+				// filter not needed vessels
+				if (vessel == null) continue;
+    			if (vessel.vesselType == VesselType.EVA ||
+        			vessel.vesselType == VesselType.Flag ||
+        			vessel.vesselType == VesselType.SpaceObject ||
+        			vessel.vesselType == VesselType.Unknown ||
+        			vessel.vesselType == VesselType.Debris)
+        			continue;
+
                 AHShipAntennas shipAntennas = new AHShipAntennas();
                 // catch vessel parts in a smart way, unloaded vessels we need to catch from protovessel
                 if (vessel.loaded)
