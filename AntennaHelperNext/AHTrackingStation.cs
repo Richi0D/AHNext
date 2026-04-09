@@ -134,16 +134,21 @@ namespace AntennaHelperNext
 		
 		private void ProtoVesselDestroyed(ProtoVessel pv)
 		{
-			VesselDestroy();
+			if (pv == null) return;
+			AHShipList.RemoveVessel(pv.vesselID);
+			AHMapCircle.InitRelayBubbles();
+			GetActiveVessel();
 		}
 		
 		private void VesselDestroy (Vessel v = null)
 		{
+			if (v == null) return;
 			// any other vessel is destroyed, update the list of vessels
-			AHShipList.UpdateShipLists(editorOnlyRelayShips: false);
+			// AHShipList.UpdateShipLists(doSavedShips: false, editorOnlyRelayShips: false);
+			AHShipList.RemoveVessel(v.id);
 			AHMapCircle.InitRelayBubbles();
 			GetActiveVessel();
-		}			
+		}
 		
 		
 		public void QuitEditor (GameEvents.FromToAction<GameScenes, GameScenes> eData)

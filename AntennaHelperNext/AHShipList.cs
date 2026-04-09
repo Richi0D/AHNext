@@ -189,6 +189,24 @@ namespace AntennaHelperNext
             }
         }
 
+        public static void RemoveVessel(Guid vesselId)
+        {
+            // --- Flight vessels ---
+            Vessel vesselToRemove = null;
+            foreach (var kvp in FlightShipList)
+            {
+                if (kvp.Key != null && kvp.Key.id == vesselId)
+                {
+                    vesselToRemove = kvp.Key;
+                    break;
+                }
+            }
+            if (vesselToRemove != null)
+            {
+                FlightShipList.Remove(vesselToRemove);
+            }
+        }        
+        
         public static void GetAntennaPartList()
         {
             AntennaPartList.Clear();

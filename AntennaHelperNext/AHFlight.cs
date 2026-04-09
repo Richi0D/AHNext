@@ -216,7 +216,8 @@ namespace AntennaHelperNext
 				return;
 			}
 			// any other vessel is destroyed, update the list of vessels
-			AHShipList.UpdateShipLists(doSavedShips: false);
+			// AHShipList.UpdateShipLists(doSavedShips: false);
+			AHShipList.RemoveVessel(v.id);
 			AHMapCircle.InitRelayBubbles();
 		}
 		
