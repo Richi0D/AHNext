@@ -211,7 +211,7 @@ namespace AntennaHelperNext
                     pointMat.SetColor("POINT_COLOR", AHColors.Bubble100);
                     break;
             }
-            pointMat.SetFloat("POINT_SIZE", 10.0f);				
+            pointMat.SetFloat("POINT_SIZE", 4.0f);				
             // enable material
             pointMat.SetPass(0);
             

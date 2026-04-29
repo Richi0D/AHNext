@@ -61,7 +61,7 @@ namespace AntennaHelperNext
 			{
 				t_points.Add(points[i]);
 				t_indexes.Add(t_indexes.Count);
-				if (t_indexes.Count > max_particles || i == points.Count - 1)
+				if (t_indexes.Count >= max_particles || i == points.Count - 1)
 				{
 					m = new Mesh();
 					m.SetVertices(t_points);

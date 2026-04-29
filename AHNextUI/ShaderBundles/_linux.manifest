@@ -1,0 +1,17 @@
+ManifestFileVersion: 0
+CRC: 1821751826
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: b6ab1ec616def05b9a86f56c75a72092
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 55d48f4ad9c3b13330b9eb5ee5686477
+HashAppended: 0
+ClassTypes:
+- Class: 48
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Assets/Shaders/point_particle.shader
+Dependencies: []

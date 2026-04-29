@@ -1,10 +1,3 @@
-// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
-// render a point sprite
-// - POINT_COLOR: point color
-// - POINT_SIZE: point size on screen, in pixels
-
-
 Shader "Custom/PointParticle"
 {
   Properties
@@ -23,43 +16,65 @@ Shader "Custom/PointParticle"
     {
       CGPROGRAM
       #pragma vertex vert
+      #pragma geometry geom
       #pragma fragment frag
-      #pragma target 2.5
+      #pragma target 4.0   // geometry shaders need SM4+
 
       fixed4 POINT_COLOR;
       float POINT_SIZE;
 
-      struct v2f
+      // --- vertex stage: just pass clip-space position through ---
+      struct v2g
       {
-        float size : PSIZE;
-        float inv_hsize : TEXCOORD0;
-        float2 screen_coords : TEXCOORD1;
+        float4 pos : SV_POSITION;
       };
 
-      v2f vert(float4 in_pos : POSITION, out float4 pos : SV_POSITION)
+      v2g vert(float4 in_pos : POSITION)
       {
-        // output clip-space vertex position
-        pos = UnityObjectToClipPos(in_pos);
-
-        // pass down point size and inverse of point half-size
-        v2f o;
-        o.size = POINT_SIZE;
-        o.inv_hsize = 2.0 / o.size;
-
-        // calculate and pass down screen-space position of point center
-        o.screen_coords = (pos.xy / pos.w) * 0.5 + 0.5;
-        o.screen_coords *= _ScreenParams.xy;
-        o.screen_coords.y = _ScreenParams.y - o.screen_coords.y;
+        v2g o;
+        o.pos = UnityObjectToClipPos(in_pos);
         return o;
       }
 
-      half4 frag(v2f i, UNITY_VPOS_TYPE screen_pos : VPOS) : COLOR
+      // --- geometry stage: expand each point to a screen-space quad ---
+      struct g2f
       {
-        // calculate normalized distance between fragment screen-space
-        // position, and point center in screen-space
-        float k = 1.0 - distance(screen_pos.xy, i.screen_coords.xy) * i.inv_hsize;
+        float4 pos   : SV_POSITION;
+        float2 uv    : TEXCOORD0;   // -1..1 within the quad
+      };
 
-        // calculate output color
+      [maxvertexcount(4)]
+      void geom(point v2g input[1], inout TriangleStream<g2f> stream)
+      {
+        float4 center = input[0].pos;
+
+        // pixel size → NDC size  (divide by w first to get NDC, then offset)
+        float2 halfSize = (POINT_SIZE * 0.5) / _ScreenParams.xy;
+
+        // emit two triangles (triangle strip = 4 verts)
+        const float2 corners[4] = {
+          float2(-1, 1), float2( 1, 1),
+          float2(-1,-1), float2( 1,-1)
+        };
+
+        for (int i = 0; i < 4; i++)
+        {
+          g2f o;
+          // offset in NDC; center is already in clip space so divide by w
+          float2 offset = corners[i] * halfSize * center.w;
+          o.pos = center + float4(offset, 0, 0);
+          o.uv  = corners[i];        // -1..1
+          stream.Append(o);
+        }
+      }
+
+      // --- fragment stage: soft circular disc, same as before ---
+      half4 frag(g2f i) : SV_Target
+      {
+        float dist = length(i.uv);          // 0 at centre, ~1.41 at corner
+        float k = 1.0 - saturate(dist);     // linear falloff, clip outside circle
+        if (k <= 0) discard;
+
         half4 output = POINT_COLOR;
         output.w *= k;
         return output;

@@ -1,0 +1,23 @@
+ManifestFileVersion: 0
+CRC: 75023635
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: fe89b1ba14fb759965ddf03de267bcc2
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: c90fc19e2679e5295d10bd00f33cb4c3
+HashAppended: 0
+ClassTypes:
+- Class: 28
+  Script: {instanceID: 0}
+- Class: 213
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Assets/SquadCore/KSPedia/Backgrounds/BackgroundWhite.png
+- Assets/SquadCore/KSPedia/Backgrounds/BackgroundKSC.png
+- Assets/SquadCore/KSPedia/Backgrounds/BackgroundBlue.png
+- Assets/SquadCore/KSPedia/Backgrounds/BackgroundBlueGrid.png
+- Assets/SquadCore/KSPedia/Backgrounds/BackgroundBlack.png
+Dependencies: []

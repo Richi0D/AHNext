@@ -1,0 +1,10 @@
+ManifestFileVersion: 0
+CRC: 3371423746
+AssetBundleManifest:
+  AssetBundleInfos:
+    Info_0:
+      Name: squadcore
+      Dependencies: {}
+    Info_1:
+      Name: _windows
+      Dependencies: {}

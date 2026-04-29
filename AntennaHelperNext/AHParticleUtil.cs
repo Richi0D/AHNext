@@ -59,6 +59,8 @@ namespace AntennaHelperNext
 #pragma warning restore CS0618
                 {
                     AssetBundle bundle = www.assetBundle;
+                    if (bundle == null)
+                        throw new Exception("Shader bundle failed to load: " + GetShaderPath());
                     Shader[] pre_shaders = bundle.LoadAllAssets<Shader>();
                     foreach (Shader shader in pre_shaders)
                     {

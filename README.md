@@ -21,7 +21,8 @@ It fixed various issues the original mod had.
 ## Compatibility
 
 Not compatible with the original mod. Uninstall the original mod before installing this one.
-Other than that it should work with most mods if they do not modify the calculation of the antenna ranges. 
+Other than that it should work with most mods if they do not modify the calculation of the antenna ranges.
+- RemoteTech (incompatible, changes the stock antenna behavior)
 
 **DEPENDENCY:**
 * [Toolbar Controller](https://github.com/linuxgurugamer/ToolbarControl/releases)
