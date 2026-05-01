@@ -176,6 +176,7 @@ namespace AntennaHelperNext
 				return;
 			
 			vesselUpdateQueued = true;
+			ClearWatcherState();
 			StartCoroutine(UpdateVesselDataDelayed());
 		}
 		
@@ -199,6 +200,7 @@ namespace AntennaHelperNext
 		
 		private void VesselSwitch (Vessel v)
 		{
+			ClearWatcherState();
 			GetActiveVessel();
 		}	
 		
@@ -212,6 +214,7 @@ namespace AntennaHelperNext
 			
 			if (v == AHMapCircle.activeVessel.vessel) {
 				Debug.Log ("[AH] the active vessel is destroyed");
+				ClearWatcherState();
 				Destroy (this);
 				return;
 			}
@@ -230,8 +233,7 @@ namespace AntennaHelperNext
 			{
 				AHMapCircle.OnVesselChange();
 			}
-		}		
-		
+		}
 		
 		public void QuitEditor (GameEvents.FromToAction<GameScenes, GameScenes> eData)
 		{
@@ -244,9 +246,13 @@ namespace AntennaHelperNext
 		// watch for antenna state changes and update the list of antennas
 		private readonly Dictionary<ModuleDeployableAntenna, ModuleDeployablePart.DeployState> lastStates =
 			new Dictionary<ModuleDeployableAntenna, ModuleDeployablePart.DeployState>();
+		private double lastTotalAntennaPower = -1;
+
 		public void AntennaStateWatcher()
 		{
 			if (AHMapCircle.activeVessel.vessel == null) return;
+
+			// state watcher
 			foreach (var antenna in AHMapCircle.activeVessel.vessel.FindPartModulesImplementing<ModuleDeployableAntenna>())
 			{
 				var currentState = antenna.deployState;
@@ -259,18 +265,39 @@ namespace AntennaHelperNext
 				if (prevState != currentState)
 				{
 					lastStates[antenna] = currentState;
-					// since we filter extended antennas on part level, we need to update the whole antenna list
-					AHMapCircle.ActiveShipAntennas.FetchAntennas(AHMapCircle.activeVessel.vessel.parts, false);
-					// if the ship is in the relay list, we need to update the Shipantennas
-					if (AHShipList.FlightShipList.ContainsKey(AHMapCircle.activeVessel.vessel))
-					{
-						AHShipList.FlightShipList[AHMapCircle.activeVessel.vessel] = AHMapCircle.ActiveShipAntennas;
-					}
-					// also update ranges
-					AHMapCircle.UpdateBubbleRanges();
+					TriggerUpdate();
 				}
 			}
+
+			// watch total antenna power from ModuleDataTransmitter
+			double totalPower = 0;
+			foreach (var transmitter in AHMapCircle.activeVessel.vessel.FindPartModulesImplementing<ModuleDataTransmitter>())
+			{
+				totalPower += transmitter.antennaPower;
+			}
+
+			if (Math.Abs(totalPower - lastTotalAntennaPower) > 0.01)
+			{
+				lastTotalAntennaPower = totalPower;
+				TriggerUpdate();
+			}
 		}
+		
+		private void TriggerUpdate()
+		{
+			AHMapCircle.ActiveShipAntennas.FetchAntennas(AHMapCircle.activeVessel.vessel.parts, false);
+			if (AHShipList.FlightShipList.ContainsKey(AHMapCircle.activeVessel.vessel))
+			{
+				AHShipList.FlightShipList[AHMapCircle.activeVessel.vessel] = AHMapCircle.ActiveShipAntennas;
+			}
+			AHMapCircle.UpdateBubbleRanges();
+		}
+		
+		public void ClearWatcherState()
+		{
+			lastTotalAntennaPower = -1;
+			lastStates.Clear();
+		}		
 		
         #region GUI
         // window positions

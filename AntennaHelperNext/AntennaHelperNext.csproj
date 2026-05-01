@@ -13,7 +13,9 @@
         <AssemblyName>AntennaHelperNext</AssemblyName>
         <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
         <FileAlignment>512</FileAlignment>
-        <FileVersion>1.0.0.0</FileVersion>
+        <Version>1.0.8</Version>
+        <FileVersion>1.0.8</FileVersion>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
         <PlatformTarget>AnyCPU</PlatformTarget>
@@ -79,7 +81,7 @@
     <ItemGroup>
         <KSPVersionFile Include=".">
             <Destination>$(RepoRootPath)../GameData/AntennaHelperNext/AntennaHelperNext.version</Destination>
-            <URL>https://github.com/Richi0D/AHNext/releases/latest/download/mymod.version</URL>
+            <URL>https://github.com/Richi0D/AHNext/raw/refs/heads/main/GameData/AntennaHelperNext/AntennaHelperNext.version</URL>
             <Download>https://github.com/Richi0D.AHNext/releases/latest</Download>
             <KSP_Version_Min>1.12</KSP_Version_Min>
         </KSPVersionFile>

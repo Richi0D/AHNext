@@ -86,6 +86,14 @@ namespace AntennaHelperNext
         }
         
         
+        private void Update()
+        {
+	        if (HighLogic.LoadedSceneIsEditor)
+	        {
+		        EditorAntennaStateWatcher();
+	        }
+        }
+        
         public void QuitEditor (GameEvents.FromToAction<GameScenes, GameScenes> eData)
         {
 	        AntennaHelperSettings.Save();
@@ -133,7 +141,9 @@ namespace AntennaHelperNext
 
 	        if (eventType == ConstructionEventType.PartDetached)
 	        {
-		        RemovePartAndDescendants(part);
+		        // RemovePartAndDescendants(part);
+		        // Since symmetries in the list symmetryCounterparts are not reliable, we need to rebuild whole list.
+		        RefreshAntennas();
 	        }
 	        EditorShipAntennas.UpdateAntennas();
 	        EditorShipAntennas.UpdateRanges(selectedTarget.targetPower);
@@ -145,7 +155,9 @@ namespace AntennaHelperNext
 	        EditorShipAntennas.AddAntenna(p);
 	        // Add symmetry counterparts
 	        foreach (Part sym in p.symmetryCounterparts)
-		        EditorShipAntennas.AddAntenna(sym);
+	        {
+		        EditorShipAntennas.AddAntenna(sym);		        
+	        }
 
 	        // Add children recursively
 	        foreach (Part c in p.children)
@@ -173,6 +185,28 @@ namespace AntennaHelperNext
 	        double RelaySignal = AHUtil.GetSignalStrength(AHUtil.GetNormalizedRange(range, maxRelayRange));
 	        EditorCustomRange = (range, VesselSignal, RelaySignal);
         }
+        
+        
+        private double lastEditorTotalAntennaPower = -1;
+        private void EditorAntennaStateWatcher()
+        {
+	        if (EditorLogic.fetch?.ship?.parts == null) return;
+
+	        double totalPower = 0;
+	        foreach (var part in EditorLogic.fetch.ship.parts)
+	        {
+		        foreach (var transmitter in part.FindModulesImplementing<ModuleDataTransmitter>())
+		        {
+			        totalPower += transmitter.antennaPower;
+		        }
+	        }
+
+	        if (Math.Abs(totalPower - lastEditorTotalAntennaPower) > 0.01)
+	        {
+		        lastEditorTotalAntennaPower = totalPower;
+		        RefreshAntennas();
+	        }
+        }        
         
         
         #region GUI
