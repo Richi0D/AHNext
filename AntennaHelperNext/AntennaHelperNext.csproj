@@ -13,8 +13,8 @@
         <AssemblyName>AntennaHelperNext</AssemblyName>
         <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
         <FileAlignment>512</FileAlignment>
-        <Version>1.0.8</Version>
-        <FileVersion>1.0.8</FileVersion>
+        <Version>1.0.9</Version>
+        <FileVersion>1.0.9</FileVersion>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
