@@ -253,44 +253,40 @@ namespace AntennaHelperNext
 			GUI.DragWindow ();
 		}
 
-		public static void TargetWindow (int id)
+		public static void TargetWindow(int id)
 		{
-			// Close Button
 			DrawCloseButton("EditorTarget");
-			
-			// DSN Selector
-			GUILayout.BeginVertical ();
+			GUILayout.BeginVertical();
 			GUIStyle ButtonStyle = AHUIStyling.ButtonDefault;
-			for (int i = 0 ; i < 3 ; i++) {
-				String dsnStr = /*DSN Level*/ Localizer.Format ("#autoLOC_AH_0015") + " " + (i + 1) + "  ( " + AHUtil.ToKMG(GameVariables.Instance.GetDSNRange (i / 2f)) + " )";
-				
-				// mark current DSN level
-				if (i / 2f == AntennaHelperEditor.trackingStationLevel) {
-					dsnStr = "**" + dsnStr + "**";
-				}
-				// mark current target
-				if (AntennaHelperEditor.selectedTarget.targetName == Localizer.Format("#autoLOC_AH_0015") + " " +
-				    (int)((i / 2f) * 2 + 1))
-				{
-					ButtonStyle = AHUIStyling.ButtonSelected;
-				}
-				else
-				{
-					ButtonStyle = AHUIStyling.ButtonDefault;
-				}
-				
+
+			// The 'Count' from KSP is the number of upgrades. 
+			// Total Levels = Upgrades + 1. (Works for Stock and CBK)
+			int upgradeCount = ScenarioUpgradeableFacilities.GetFacilityLevelCount(SpaceCenterFacility.TrackingStation);
+			int totalLevels = upgradeCount + 1;
+			float currentNorm = ScenarioUpgradeableFacilities.GetFacilityLevel(SpaceCenterFacility.TrackingStation);
+
+			for (int i = 0; i < totalLevels; i++)
+			{
+				float norm = (totalLevels > 1) ? (float)i / (totalLevels - 1) : 0f;
+				double targetPower = GameVariables.Instance.GetDSNRange(norm);
+
+				string dsnLabel = Localizer.Format("#autoLOC_AH_0015") + " " + (i + 1);
+				string dsnStr = dsnLabel + "  ( " + AHUtil.ToKMG(targetPower) + " )";
+
+				if (Math.Abs(norm - currentNorm) < 0.01f) dsnStr = "**" + dsnStr + "**";
+
+				// Handle button selection state
+				ButtonStyle = (AntennaHelperEditor.selectedTarget.targetName == dsnLabel) 
+					? AHUIStyling.ButtonSelected 
+					: AHUIStyling.ButtonDefault;
+
 				if (GUILayout.Button(dsnStr, ButtonStyle))
 				{
-					//AntennaHelperEditor.CloseWindow("EditorTarget");
-					double targetPower = GameVariables.Instance.GetDSNRange (i / 2f);
-					string targetName = Localizer.Format("#autoLOC_AH_0015") + " " +
-					                                 (int)((i / 2f) * 2 + 1);
-					AntennaHelperEditor.selectedTarget = (targetName,Guid.Empty, targetPower, AHTargetType.DSN);
-					AntennaHelperEditor.EditorShipAntennas.UpdateRanges(AntennaHelperEditor.selectedTarget.targetPower);
+					AntennaHelperEditor.selectedTarget = (dsnLabel, Guid.Empty, targetPower, AHTargetType.DSN);
+					AntennaHelperEditor.EditorShipAntennas.UpdateRanges(targetPower);
 					AntennaHelperEditor.UpdateCustomRange(AntennaHelperEditor.EditorCustomRange.customDistance);
 				}
 			}
-
 			// Ship Selector (In-Flight Ships)
 			GUILayout.BeginHorizontal ();
 			if (AHTargetType.FLIGHT == AntennaHelperEditor.selectedTarget.targetType)
