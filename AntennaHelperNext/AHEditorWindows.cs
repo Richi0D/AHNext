@@ -187,7 +187,18 @@ namespace AntennaHelperNext
 				true, 2), AHUIStyling.DefaultLabel, GUILayout.Width(widthSecondCol));
 			GUILayout.Label(/*Relay*/AHUtil.ToKMG(AntennaHelperEditor.EditorShipAntennas.RelayRangesMax[100],
 				true, 2), AHUIStyling.DefaultLabel);	
-			GUILayout.EndHorizontal();			
+			GUILayout.EndHorizontal();
+			if (KerbalismApi.usingKerbalism)
+			{
+				GUILayout.BeginHorizontal();
+				GUILayout.Label( /*Range 100%*/"",
+					AHUIStyling.SecondaryDefaultLabel, GUILayout.Width(widthFirstCol));
+				GUILayout.Label( /*Vessel*/"(" + AHUtil.HumanReadableDataRate(AntennaHelperEditor.EditorShipAntennas.KerbalismRates[100]) + ")",
+					AHUIStyling.SecondaryDefaultLabel, GUILayout.Width(widthSecondCol));
+				GUILayout.Label( /*Relay*/"(" + AHUtil.HumanReadableDataRate(AntennaHelperEditor.EditorShipAntennas.KerbalismRelayRates[100]) + ")",
+					AHUIStyling.SecondaryDefaultLabel);
+				GUILayout.EndHorizontal();
+			}
 			AHUIStyling.DrawSeparator();
 			
 			// Signal Color Bar
@@ -202,8 +213,20 @@ namespace AntennaHelperNext
 			GUILayout.Label(/*25*/AHUtil.ToKMG(AntennaHelperEditor.EditorShipAntennas.VesselRangesMax[25],
 				true, 2), AHUIStyling.CenterLabel, GUILayout.Width(pos25[1]));
 			// GUILayout.Label(/*0*/AHUtil.ToKMG(AntennaHelperEditor.EditorShipAntennas.VesselRangesMax[0],
-			// 	true, 2), AHUIStyling.CenterLabel, GUILayout.Width(pos100[1]));			
+			// 	true, 2), AHUIStyling.CenterLabel, GUILayout.Width(pos100[1]));		
 			GUILayout.EndHorizontal ();
+			if (KerbalismApi.usingKerbalism)
+			{
+				GUILayout.BeginHorizontal();
+				GUILayout.Label(/*Placeholder*/"", AHUIStyling.DefaultLabel, GUILayout.Width(pos100[1]));
+				GUILayout.Label("(" + AHUtil.HumanReadableDataRate(AntennaHelperEditor.EditorShipAntennas.KerbalismRates[75]) + ")",
+					AHUIStyling.SecondaryCenterLabel, GUILayout.Width(pos75[1]));
+				GUILayout.Label("(" + AHUtil.HumanReadableDataRate(AntennaHelperEditor.EditorShipAntennas.KerbalismRates[50]) + ")",
+					AHUIStyling.SecondaryCenterLabel, GUILayout.Width(pos50[1]));
+				GUILayout.Label("(" + AHUtil.HumanReadableDataRate(AntennaHelperEditor.EditorShipAntennas.KerbalismRates[25]) + ")",
+					AHUIStyling.SecondaryCenterLabel, GUILayout.Width(pos25[1]));
+				GUILayout.EndHorizontal();
+			}
 			GUILayout.Label (StartVariables.signalPerDistanceTex, GUILayout.ExpandWidth(true));
 			// position the text labels on the signal bar
 			Rect baseRect = GUILayoutUtility.GetLastRect();
@@ -227,7 +250,19 @@ namespace AntennaHelperNext
 				true, 2), AHUIStyling.CenterLabel, GUILayout.Width(pos25[1]));
 			// GUILayout.Label(/*0*/AHUtil.ToKMG(AntennaHelperEditor.EditorShipAntennas.RelayRangesMax[0],
 			// 	true, 2), AHUIStyling.CenterLabel, GUILayout.Width(pos0[1]));			
-			GUILayout.EndHorizontal ();	
+			GUILayout.EndHorizontal ();
+			if (KerbalismApi.usingKerbalism)
+			{
+				GUILayout.BeginHorizontal();
+				GUILayout.Label(/*Placeholder*/"", AHUIStyling.DefaultLabel, GUILayout.Width(pos100[1]));
+				GUILayout.Label("(" + AHUtil.HumanReadableDataRate(AntennaHelperEditor.EditorShipAntennas.KerbalismRelayRates[75]) + ")",
+					AHUIStyling.SecondaryCenterLabel, GUILayout.Width(pos75[1]));
+				GUILayout.Label("(" + AHUtil.HumanReadableDataRate(AntennaHelperEditor.EditorShipAntennas.KerbalismRelayRates[50]) + ")",
+					AHUIStyling.SecondaryCenterLabel, GUILayout.Width(pos50[1]));
+				GUILayout.Label("(" + AHUtil.HumanReadableDataRate(AntennaHelperEditor.EditorShipAntennas.KerbalismRelayRates[25]) + ")",
+					AHUIStyling.SecondaryCenterLabel, GUILayout.Width(pos25[1]));
+				GUILayout.EndHorizontal();
+			}
 			GUILayout.Label(/*Relay Ranges*/Localizer.Format("#autoLOC_AH_0104"), AHUIStyling.HeaderLabel);
 			AHUIStyling.DrawSeparator();
 			
@@ -526,13 +561,18 @@ namespace AntennaHelperNext
 			GUI.DragWindow ();
 		}
 
+		private static Vector2 scrollVectorEditorPlanet;
 		public static void PlanetWindow (int id)
 		{
+			float widthDataCol = 90;
+			float widthTitleFirstCol = AntennaHelperEditor.EditorWindows["EditorPlanet"].Position.width - (widthDataCol * 4) - 60;
+			float widthTitleSecondCol = widthDataCol * 2;
 			
-			float widthTitleFirstCol = AntennaHelperEditor.EditorWindows["EditorPlanet"].Position.width * .24f;
-			float widthTitleSecondCol = AntennaHelperEditor.EditorWindows["EditorPlanet"].Position.width * .38f;
-			float widthMinCol = AntennaHelperEditor.EditorWindows["EditorPlanet"].Position.width * .19f;	
-			float widthMaxCol = AntennaHelperEditor.EditorWindows["EditorPlanet"].Position.width * .19f;			
+			//float widthTitleFirstCol = AntennaHelperEditor.EditorWindows["EditorPlanet"].Position.width * .24f;
+			
+			//float widthTitleSecondCol = AntennaHelperEditor.EditorWindows["EditorPlanet"].Position.width * .38f;
+			//float widthMinCol = AntennaHelperEditor.EditorWindows["EditorPlanet"].Position.width * .19f;
+			
 			
 			// Close Button
 			DrawCloseButton("EditorPlanet");
@@ -542,21 +582,21 @@ namespace AntennaHelperNext
 			GUILayout.Space (5f);
 			GUILayout.BeginHorizontal ();
 			GUILayout.Label(/*Distance*/Localizer.Format("#autoLOC_AH_0108"),
-				AHUIStyling.DefaultLabel, GUILayout.Width(widthTitleFirstCol));
+				AHUIStyling.DefaultLabel, GUILayout.Width(widthTitleFirstCol+15));
 			GUILayout.Label(/*Min*/Localizer.Format("#autoLOC_AH_0025"),
-				AHUIStyling.DefaultLabel, GUILayout.Width(widthMinCol));
+				AHUIStyling.DefaultLabel, GUILayout.Width(widthDataCol));
 			GUILayout.Label(/*Max*/Localizer.Format("#autoLOC_AH_0026"),
-				AHUIStyling.DefaultLabel, GUILayout.Width(widthMaxCol));	
+				AHUIStyling.DefaultLabel, GUILayout.Width(widthDataCol));	
 			GUILayout.Label(/*Min*/Localizer.Format("#autoLOC_AH_0025"),
-				AHUIStyling.DefaultLabel, GUILayout.Width(widthMinCol));
+				AHUIStyling.DefaultLabel, GUILayout.Width(widthDataCol));
 			GUILayout.Label(/*Max*/Localizer.Format("#autoLOC_AH_0026"),
-				AHUIStyling.DefaultLabel);
+				AHUIStyling.DefaultLabel, GUILayout.Width(widthDataCol));
 			GUILayout.EndHorizontal();
 			AHUIStyling.DrawSeparator();
 			// Titles
 			GUILayout.BeginHorizontal ();
 			GUILayout.Label(/*Planet*/Localizer.Format("#autoLOC_AH_0024"),
-				AHUIStyling.BoldLabel, GUILayout.Width(widthTitleFirstCol));
+				AHUIStyling.BoldLabel, GUILayout.Width(widthTitleFirstCol+15));
 			GUILayout.Label(/*Vessel*/Localizer.Format("#autoLOC_AH_0039") + " " + Localizer.Format("#autoLOC_AH_0060"),
 				AHUIStyling.BoldLabel, GUILayout.Width(widthTitleSecondCol));
 			GUILayout.Label(/*Relay*/Localizer.Format("#autoLOC_AH_0003") + " " + Localizer.Format("#autoLOC_AH_0060"),
@@ -565,39 +605,60 @@ namespace AntennaHelperNext
 			//AHUIStyling.DrawSeparator();
 			
 			// planet list
+			scrollVectorEditorPlanet = GUILayout.BeginScrollView (scrollVectorEditorPlanet);
 			foreach (var planet in AHPlanetList.PlanetList)
 			{
 				string planetName = planet.Key.bodyName;
-				GUILayout.BeginHorizontal ();
-				GUILayout.Label(/*Planet*/planetName,
-					AHUIStyling.DefaultLabel, GUILayout.Width(widthTitleFirstCol));
 
-				string minVesselSignal = "N/A";
-				string maxVesselSignal = "N/A";
-				string minRelaySignal = "N/A";
-				string maxRelaySignal = "N/A";
 				if (AntennaHelperEditor.EditorShipAntennas.PlanetSignalStrengths.ContainsKey(planetName))
 				{
-					minVesselSignal = AntennaHelperEditor.EditorShipAntennas.PlanetSignalStrengths[planetName]
-						.minVesselSignal.ToString("0.00%");
-					maxVesselSignal = AntennaHelperEditor.EditorShipAntennas.PlanetSignalStrengths[planetName]
-						.maxVesselSignal.ToString("0.00%");
-					minRelaySignal = AntennaHelperEditor.EditorShipAntennas.PlanetSignalStrengths[planetName]
-						.minRelaySignal.ToString("0.00%");
-					maxRelaySignal = AntennaHelperEditor.EditorShipAntennas.PlanetSignalStrengths[planetName]
-						.maxRelaySignal.ToString("0.00%");
-				}
-				GUILayout.Label(/*Min*/minVesselSignal,
-					AHUIStyling.DefaultLabel, GUILayout.Width(widthMinCol));
-				GUILayout.Label(/*Max*/maxVesselSignal,
-					AHUIStyling.DefaultLabel, GUILayout.Width(widthMaxCol));	
-				GUILayout.Label(/*Min*/minRelaySignal,
-					AHUIStyling.DefaultLabel, GUILayout.Width(widthMinCol));
-				GUILayout.Label(/*Max*/maxRelaySignal,
-					AHUIStyling.DefaultLabel);
-				GUILayout.EndHorizontal();
+					GUILayout.BeginHorizontal ();
+					GUILayout.Label(/*Planet*/planetName,
+						AHUIStyling.DefaultLabel, GUILayout.Width(widthTitleFirstCol));
+					GUILayout.Label(/*Min*/AntennaHelperEditor.EditorShipAntennas.PlanetSignalStrengths[planetName]
+							.minVesselSignal.ToString("0.00%"),
+						AHUIStyling.DefaultLabel, GUILayout.Width(widthDataCol));
+					GUILayout.Label(/*Max*/AntennaHelperEditor.EditorShipAntennas.PlanetSignalStrengths[planetName]
+							.maxVesselSignal.ToString("0.00%"),
+						AHUIStyling.DefaultLabel, GUILayout.Width(widthDataCol));	
+					GUILayout.Label(/*Min*/AntennaHelperEditor.EditorShipAntennas.PlanetSignalStrengths[planetName]
+							.minRelaySignal.ToString("0.00%"),
+						AHUIStyling.DefaultLabel, GUILayout.Width(widthDataCol));
+					GUILayout.Label(/*Max*/AntennaHelperEditor.EditorShipAntennas.PlanetSignalStrengths[planetName]
+							.maxRelaySignal.ToString("0.00%"),
+						AHUIStyling.DefaultLabel, GUILayout.Width(widthDataCol));
+					GUILayout.EndHorizontal();
+
+					if (KerbalismApi.usingKerbalism)
+					{
+						GUILayout.BeginHorizontal();
+						GUILayout.Label( /*Planet*/"",
+							AHUIStyling.SecondaryDefaultLabel, GUILayout.Width(widthTitleFirstCol));
+						GUILayout.Label( /*Min*/"(" + AHUtil.HumanReadableDataRate(
+								AntennaHelperEditor.EditorShipAntennas.CalculateKerbalismEditorRate(
+									AntennaHelperEditor.selectedTarget.targetPower, planet.Value.minDistance,
+									AntennaHelperEditor.EditorShipAntennas.VesselPower, false)) + ")",
+							AHUIStyling.SecondaryDefaultLabel, GUILayout.Width(widthDataCol));
+						GUILayout.Label( /*Max*/"(" + AHUtil.HumanReadableDataRate(
+								AntennaHelperEditor.EditorShipAntennas.CalculateKerbalismEditorRate(
+									AntennaHelperEditor.selectedTarget.targetPower, planet.Value.maxDistance,
+									AntennaHelperEditor.EditorShipAntennas.VesselPower, false)) + ")",
+							AHUIStyling.SecondaryDefaultLabel, GUILayout.Width(widthDataCol));
+						GUILayout.Label( /*Min*/"(" + AHUtil.HumanReadableDataRate(
+								AntennaHelperEditor.EditorShipAntennas.CalculateKerbalismEditorRate(
+									AntennaHelperEditor.selectedTarget.targetPower, planet.Value.minDistance,
+									AntennaHelperEditor.EditorShipAntennas.RelayPower, true)) + ")",
+							AHUIStyling.SecondaryDefaultLabel, GUILayout.Width(widthDataCol));
+						GUILayout.Label( /*Max*/"(" + AHUtil.HumanReadableDataRate(
+						AntennaHelperEditor.EditorShipAntennas.CalculateKerbalismEditorRate(
+							AntennaHelperEditor.selectedTarget.targetPower, planet.Value.maxDistance,
+							AntennaHelperEditor.EditorShipAntennas.RelayPower, true)) + ")",
+							AHUIStyling.SecondaryDefaultLabel, GUILayout.Width(widthDataCol));
+						GUILayout.EndHorizontal();
+					}
+				}				
 			}
-			
+			GUILayout.EndScrollView ();
 			AHUIStyling.DrawSeparator();
 			// Custom distance
 			GUILayout.Label (/*Check the Signal Strength at a given distance */Localizer.Format ("#autoLOC_AH_0029") + " :");
@@ -611,13 +672,25 @@ namespace AntennaHelperNext
 			if (double.TryParse(input, out double value))
 			{
 				AntennaHelperEditor.EditorCustomRange.customDistance = value;
-			}		
+			}
 			GUILayout.Label(AntennaHelperEditor.EditorCustomRange.customVesselSignal.ToString ("0.00%"),
 				AHUIStyling.DefaultLabel, GUILayout.Width(widthTitleSecondCol));
 			GUILayout.Label(AntennaHelperEditor.EditorCustomRange.customRelaySignal.ToString ("0.00%"),
 				AHUIStyling.DefaultLabel);
 			GUILayout.EndHorizontal();
-
+			
+			if (KerbalismApi.usingKerbalism)
+			{
+				GUILayout.BeginHorizontal ();
+				GUILayout.Label("",
+					AHUIStyling.SecondaryDefaultLabel, GUILayout.Width(widthTitleFirstCol));
+				GUILayout.Label("(" + AHUtil.HumanReadableDataRate(AntennaHelperEditor.EditorShipAntennas.KerbalismRate) + ")",
+					AHUIStyling.SecondaryDefaultLabel, GUILayout.Width(widthTitleSecondCol));			
+				GUILayout.Label("(" + AHUtil.HumanReadableDataRate(AntennaHelperEditor.EditorShipAntennas.KerbalismRelayRate) + ")",
+					AHUIStyling.SecondaryDefaultLabel);				
+				GUILayout.EndHorizontal();
+			}		
+			
 			GUILayout.EndVertical ();
 			GUI.DragWindow ();
 		}

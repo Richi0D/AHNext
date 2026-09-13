@@ -124,24 +124,22 @@ namespace AntennaHelperNext
                     AHUIStyling.DefaultLabel);
                 GUILayout.EndHorizontal();  
                
+                if (KerbalismApi.usingKerbalism)
+                {
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label( /*Data Rate*/Localizer.Format("#autoLOC_AH_0115") + " : ",
+                        AHUIStyling.DefaultLabel, GUILayout.Width(widthFirstCol));
+                    GUILayout.Label( /*Vessel*/AHUtil.HumanReadableDataRate(AHMapCircle.ActiveShipAntennas.KerbalismRate),
+                        AHUIStyling.DefaultLabel);
+                    GUILayout.EndHorizontal();
+                }                
+                
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(/*Total Power*/Localizer.Format("#autoLOC_AH_0058") + " : ",
                     AHUIStyling.DefaultLabel, GUILayout.Width(widthFirstCol));
-                // create string for total power and kerbalism rate
-                string vesselPower;
-                if (KerbalismApi.usingKerbalism)
-                {
-                    vesselPower = AHUtil.ToKMG(AHMapCircle.ActiveShipAntennas.VesselPower, decimalPlaces: 2) +
-                                  "\n(" + AHUtil.HumanReadableDataRate(AHMapCircle.ActiveShipAntennas.KerbalismRate) +
-                                  ")";
-                }
-                else
-                {
-                    vesselPower = AHUtil.ToKMG(AHMapCircle.ActiveShipAntennas.VesselPower,decimalPlaces:2);
-                }
-                GUILayout.Label(/*Vessel*/vesselPower, AHUIStyling.DefaultLabel);
+                GUILayout.Label(/*Vessel*/AHUtil.ToKMG(AHMapCircle.ActiveShipAntennas.VesselPower,decimalPlaces:2), AHUIStyling.DefaultLabel);
                 GUILayout.EndHorizontal();
-                
+
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(/*Relay Power*/Localizer.Format("#autoLOC_AH_0057") + " : ",
                     AHUIStyling.DefaultLabel, GUILayout.Width(widthFirstCol));
@@ -225,6 +223,25 @@ namespace AntennaHelperNext
                 }
 
                 GUILayout.EndHorizontal();
+                
+                if (KerbalismApi.usingKerbalism)
+                {
+                    GUILayout.BeginHorizontal();
+                    double datarate = 0;
+                    if (AHAntennaType.ALL == AHMapCircle.selectedAntennaType)
+                    {
+                        datarate = AHMapCircle.ActiveShipAntennas.KerbalismRates[AHMapCircle.selectedSignalStrength];
+                    }
+                    else
+                    {
+                        datarate = AHMapCircle.ActiveShipAntennas.KerbalismRelayRates[AHMapCircle.selectedSignalStrength];
+                    }                    
+                    GUILayout.Label( /*Data Rate*/Localizer.Format("#autoLOC_AH_0116") + " : ",
+                        AHUIStyling.DefaultLabel, GUILayout.Width(widthFirstCol));
+                    GUILayout.Label( /*Vessel*/AHUtil.HumanReadableDataRate(datarate),
+                        AHUIStyling.DefaultLabel);
+                    GUILayout.EndHorizontal();
+                }
                 AHUIStyling.DrawSeparator();
 
                 // Button Active connection

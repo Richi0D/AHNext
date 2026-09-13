@@ -184,6 +184,7 @@ namespace AntennaHelperNext
 	        double VesselSignal = AHUtil.GetSignalStrength(AHUtil.GetNormalizedRange(range, maxVesselRange));
 	        double RelaySignal = AHUtil.GetSignalStrength(AHUtil.GetNormalizedRange(range, maxRelayRange));
 	        EditorCustomRange = (range, VesselSignal, RelaySignal);
+	        EditorShipAntennas.UpdateKerbalismEditorRates(selectedTarget.targetPower, range);
         }
         
         
@@ -217,7 +218,7 @@ namespace AntennaHelperNext
         {
 	        { "EditorMain", new WindowInfo(
 		        835298,
-		        new Rect(AntennaHelperSettings.WindowPositions["editor_main_window_position"], new Vector2(450, 450)),
+		        new Rect(AntennaHelperSettings.WindowPositions["editor_main_window_position"], new Vector2(450, 250)),
 		        AHEditorWindows.MainWindow,
 		        Localizer.Format ("#autoLOC_AH_0001"),
 		        saveKey:"editor_main_window_position")
@@ -233,7 +234,7 @@ namespace AntennaHelperNext
 	        },
 	        { "EditorPlanet", new WindowInfo(
 			        332980,
-			        new Rect(AntennaHelperSettings.WindowPositions["editor_signal_strenght_per_planet_window_position"], new Vector2(450, 240)),
+			        new Rect(AntennaHelperSettings.WindowPositions["editor_signal_strenght_per_planet_window_position"], new Vector2(520, 450)),
 			        AHEditorWindows.PlanetWindow,
 			        Localizer.Format ("#autoLOC_AH_0060") + " / " + Localizer.Format ("#autoLOC_AH_0059"),
 			        saveKey:"editor_signal_strenght_per_planet_window_position",

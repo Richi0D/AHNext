@@ -26,6 +26,8 @@ namespace AntennaHelperNext
 	{
 		public static bool usingKerbalism = false;
 		public static Func<Vessel , double> KerbalismConnectionRate;
+		public static Func<double> KerbalismDampingExponent;
+		public static Func<double> KerbalismTransmitFactor;
 		void Start()
 		{
 			// Find the Kerbalism assembly by name (KerbalismBootstrap loads it dynamically)
@@ -48,6 +50,15 @@ namespace AntennaHelperNext
 			}
 			
 			KerbalismConnectionRate = (Func<Vessel , double>)Delegate.CreateDelegate(typeof(Func<Vessel , double>), apiType.GetMethod("VesselConnectionRate"));
+			var simType = kerbalismAssembly.GetType("KERBALISM.Sim");
+			var preferencesType = kerbalismAssembly.GetType("KERBALISM.PreferencesScience");
+			var dampingProperty = simType?.GetProperty("DataRateDampingExponent", BindingFlags.Public | BindingFlags.Static);
+			var instanceProperty = preferencesType?.GetProperty("Instance", BindingFlags.Public | BindingFlags.Static);
+			var transmitFactorField = preferencesType?.GetField("transmitFactor", BindingFlags.Public | BindingFlags.Instance);
+			if (dampingProperty != null)
+				KerbalismDampingExponent = () => (double)dampingProperty.GetValue(null, null);
+			if (instanceProperty != null && transmitFactorField != null)
+				KerbalismTransmitFactor = () => (float)transmitFactorField.GetValue(instanceProperty.GetValue(null, null));
 			usingKerbalism = true;
 		}
 	}	

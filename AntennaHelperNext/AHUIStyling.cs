@@ -8,6 +8,9 @@ namespace AntennaHelperNext
         public static readonly GUIStyle BoldLabel;
         public static readonly GUIStyle CenterLabel;
         public static readonly GUIStyle HeaderLabel;
+        public static readonly GUIStyle SecondaryDefaultLabel;
+        public static readonly GUIStyle SecondaryBoldLabel;
+        public static readonly GUIStyle SecondaryCenterLabel;        
         public static readonly GUIStyle EditorBarLabelLeft;
         public static readonly GUIStyle EditorBarLabelCenter;
         public static readonly GUIStyle EditorBarLabelRight;
@@ -18,16 +21,28 @@ namespace AntennaHelperNext
         public static readonly GUIStyle ButtonGreen;
         public static readonly GUIStyle ButtonSelected;
 
+        
+        private static readonly RectOffset LabelMargin = new RectOffset(4, 4, 1, 1);
+        private static readonly RectOffset LabelPadding = new RectOffset(0, 0, 1, 1);
         static AHUIStyling()
         {
+            Color baseColor = GUI.skin.label.normal.textColor;
+            Color secondaryColor = baseColor * 0.8f;
+            secondaryColor.a = baseColor.a;
             
             // Default label
-            DefaultLabel = new GUIStyle(GUI.skin.GetStyle("Label"));
+            DefaultLabel = new GUIStyle(GUI.skin.GetStyle("Label"))
+            {
+                margin = LabelMargin,
+                padding = LabelPadding,
+            };
                 
             // Bold label
             BoldLabel = new GUIStyle(GUI.skin.GetStyle("Label"))
             {
-                fontStyle = FontStyle.Bold
+                fontStyle = FontStyle.Bold,
+                margin = LabelMargin,
+                padding = new RectOffset(0, 0, 2, 2)
             };
 
             // Centered label
@@ -35,7 +50,36 @@ namespace AntennaHelperNext
             {
                 alignment = TextAnchor.MiddleCenter,
                 stretchWidth = true,
+                margin = LabelMargin,
+                padding = LabelPadding
             };
+            
+            // Secondary Default label
+            SecondaryDefaultLabel = new GUIStyle(GUI.skin.GetStyle("Label"))
+            {
+                margin = LabelMargin,
+                padding = LabelPadding,
+                normal = {textColor = secondaryColor}
+            };
+                
+            // Secondary Bold label
+            SecondaryBoldLabel = new GUIStyle(GUI.skin.GetStyle("Label"))
+            {
+                fontStyle = FontStyle.Bold,
+                margin = LabelMargin,
+                padding = LabelPadding,
+                normal = {textColor = secondaryColor}
+            };
+
+            // Secondary Centered label
+            SecondaryCenterLabel = new GUIStyle(GUI.skin.GetStyle("Label"))
+            {
+                alignment = TextAnchor.MiddleCenter,
+                stretchWidth = true,
+                margin = LabelMargin,
+                padding = LabelPadding,
+                normal = {textColor = secondaryColor}
+            };            
 
             // Header label (bold)
             HeaderLabel = new GUIStyle(GUI.skin.GetStyle("Label"))
@@ -43,6 +87,8 @@ namespace AntennaHelperNext
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
                 stretchWidth = true,
+                margin = LabelMargin,
+                padding = LabelPadding
                 //fontSize = GUI.skin.label.fontSize + 2 //Does not work
             };
             

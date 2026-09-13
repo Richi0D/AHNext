@@ -22,9 +22,12 @@ namespace AntennaHelperNext
         public double RelayPower = 0;
         public Dictionary<double, double> VesselRangesMax;
         public Dictionary<double, double> RelayRangesMax;
+        public Dictionary<double, double> KerbalismRates;
+        public Dictionary<double, double> KerbalismRelayRates;
         public Dictionary<string, (double minVesselSignal, double maxVesselSignal, double minRelaySignal, double
             maxRelaySignal)> PlanetSignalStrengths;
         public double KerbalismRate = 0;
+        public double KerbalismRelayRate = 0;
 
         
         public AHShipAntennas()
@@ -40,11 +43,15 @@ namespace AntennaHelperNext
             // init vessel ranges
             RelayRangesMax = new Dictionary<double, double>();
             VesselRangesMax = new Dictionary<double, double>();
+            KerbalismRates = new Dictionary<double, double>();
+            KerbalismRelayRates = new Dictionary<double, double>();
             foreach (var signal in AHUtil.SignalMultipliers)
             {
                 double interval = signal.Key;
                 RelayRangesMax.Add(interval, 0);
                 VesselRangesMax.Add(interval, 0);
+                KerbalismRates.Add(interval, 0);
+                KerbalismRelayRates.Add(interval, 0);
             }
         }
         
@@ -292,6 +299,15 @@ namespace AntennaHelperNext
             RelayRangesMax = AHUtil.GetDistancesBySignalFixed(maxRelayRange);
             double maxVesselRange = AHUtil.GetMaxRange(VesselPower, targetPower);
             VesselRangesMax = AHUtil.GetDistancesBySignalFixed(maxVesselRange);
+            KerbalismRates = new Dictionary<double, double>();
+            KerbalismRelayRates = new Dictionary<double, double>();
+            foreach (var signal in AHUtil.SignalMultipliers)
+            {
+                KerbalismRates[signal.Key] = CalculateKerbalismEditorRate(targetPower,
+                    VesselRangesMax[signal.Key], VesselPower, false);
+                KerbalismRelayRates[signal.Key] = CalculateKerbalismEditorRate(targetPower,
+                    RelayRangesMax[signal.Key], RelayPower, true);
+            }
             
             // update ranges for planets
             foreach (var planet in AHPlanetList.PlanetList)
@@ -316,6 +332,65 @@ namespace AntennaHelperNext
                 KerbalismRate = KerbalismApi.KerbalismConnectionRate(v);
                 //Debug.Log($"[AH] Kerbalism Connection Rate: {AHUtil.HumanReadableDataRate(rate)}");
             }
+        }
+
+        public void UpdateKerbalismEditorRates(double targetPower, double distance)
+        {
+            KerbalismRate = 0;
+            KerbalismRelayRate = 0;
+            if (!KerbalismApi.usingKerbalism)
+                return;
+
+            double dampingExponent = KerbalismApi.KerbalismDampingExponent?.Invoke() ?? 6.0;
+            double transmitFactor = KerbalismApi.KerbalismTransmitFactor?.Invoke() ?? 1.0;
+            double baseRate = GetKerbalismBaseRate(transmitFactor);
+            KerbalismRate = CalculateKerbalismEditorRate(targetPower, distance, VesselPower,
+                baseRate, dampingExponent, false);
+            baseRate = GetKerbalismBaseRate(transmitFactor, true);
+            KerbalismRelayRate = CalculateKerbalismEditorRate(targetPower, distance, RelayPower,
+                baseRate, dampingExponent, true);
+        }
+
+        public double CalculateKerbalismEditorRate(double targetPower, double distance,
+            double antennaPower, bool relay = false)
+        {
+            if (!KerbalismApi.usingKerbalism)
+                return 0;
+
+            double dampingExponent = KerbalismApi.KerbalismDampingExponent?.Invoke() ?? 6.0;
+            double transmitFactor = KerbalismApi.KerbalismTransmitFactor?.Invoke() ?? 1.0;
+            return CalculateKerbalismEditorRate(targetPower, distance, antennaPower,
+                GetKerbalismBaseRate(transmitFactor, relay), dampingExponent, relay);
+        }
+
+        private double CalculateKerbalismEditorRate(double targetPower, double distance,
+            double antennaPower, double baseRate, double dampingExponent, bool relay)
+        {
+            double signal = AHUtil.GetSignalStrength(AHUtil.GetNormalizedRange(distance,
+                AHUtil.GetMaxRange(antennaPower, targetPower)));
+            return baseRate * Math.Pow(signal, dampingExponent);
+        }
+
+        private double GetKerbalismBaseRate(double transmitFactor, bool relay = false)
+        {
+            double product = 1.0;
+            int transmitterCount = 0;
+            bool editorPreview = HighLogic.LoadedSceneIsEditor;
+            List<ModuleDataTransmitter> antennas = relay ? RelayAntennas : VesselAntennas;
+            foreach (ModuleDataTransmitter antenna in antennas)
+            {
+                if (antenna.antennaType == AntennaType.INTERNAL || !antenna.isEnabled ||
+                    (!editorPreview && !antenna.CanComm()))
+                    continue;
+
+                product *= antenna.DataRate;
+                transmitterCount++;
+            }
+
+            if (transmitterCount == 0)
+                return 0;
+
+            return Math.Pow(product, 1.0 / transmitterCount) * transmitFactor;
         }
     }
 }

@@ -91,7 +91,7 @@ namespace AntennaHelperNext
             }
         }
 
-        private static float lastMinWindowHeightFlight = 200;
+        private static float lastMinWindowHeightFlight = 150;
         public static void onGuiWindow(Dictionary<string, WindowInfo> winDictonary)
         {
             // set Skin
