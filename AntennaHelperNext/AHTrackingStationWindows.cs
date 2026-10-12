@@ -9,6 +9,15 @@ namespace AntennaHelperNext
 
     public static class AHTrackingStationWindows
     {
+        // relay selector is used in tracking station and flight with the same name
+        public const string RelayListWindowName = "RelayList";
+
+        private static Dictionary<string, WindowInfo> SceneWindows()
+        {
+            return HighLogic.LoadedScene == GameScenes.FLIGHT
+                ? AHFlight.FlightWindows
+                : AHTrackingStation.TrackingStationWindows;
+        }
 
         // Close button for all windows
         private static void DrawCloseButton(string windowName)
@@ -257,6 +266,7 @@ namespace AntennaHelperNext
                 if (GUILayout.Button(Localizer.Format("#autoLOC_AH_0045"), ButtonStyle))
                 {
                     AHMapCircle.displayType = AHDisplayType.ACTIVE;
+                    WindowInfo.CloseWindow(RelayListWindowName, SceneWindows());
                 }
 
                 // Button DSN connection
@@ -272,6 +282,7 @@ namespace AntennaHelperNext
                 if (GUILayout.Button(Localizer.Format("#autoLOC_AH_0046"), ButtonStyle))
                 {
                     AHMapCircle.displayType = AHDisplayType.DSN;
+                    WindowInfo.CloseWindow(RelayListWindowName, SceneWindows());
                 }
 
                 // Button RELAY connection
@@ -287,6 +298,8 @@ namespace AntennaHelperNext
                 if (GUILayout.Button(Localizer.Format("#autoLOC_AH_0048"), ButtonStyle))
                 {
                     AHMapCircle.displayType = AHDisplayType.RELAY;
+                    AHMapCircle.RefreshSortedRelays();
+                    WindowInfo.ShowWindow(RelayListWindowName, SceneWindows());
                 }
 
                 // Button DSN+RELAY connection
@@ -302,7 +315,14 @@ namespace AntennaHelperNext
                 if (GUILayout.Button(Localizer.Format("#autoLOC_AH_0047"), ButtonStyle))
                 {
                     AHMapCircle.displayType = AHDisplayType.DSNRELAY;
+                    AHMapCircle.RefreshSortedRelays();
+                    WindowInfo.ShowWindow(RelayListWindowName, SceneWindows());
                 }
+            }
+            else if (SceneWindows()[RelayListWindowName].IsVisible)
+            {
+                // relay selection is only usable in map view
+                WindowInfo.CloseWindow(RelayListWindowName, SceneWindows());
             }
             
             // DEBUG
@@ -424,8 +444,63 @@ namespace AntennaHelperNext
             GUILayout.EndScrollView ();
             GUILayout.EndVertical ();
             GUI.DragWindow ();
-        }            
-        
+        }
+
+        private static Vector2 scrollVectorRelayList;
+        private static float relayListLastUpdate = -1f;
+        public static void RelayListWindow(int id)
+        {
+            // Close Button
+            DrawCloseButton(RelayListWindowName);
+
+            // vessels are moving, refresh signal strength while the window is open.
+            // only during layout, so the buttons don't change between layout and repaint/click
+            if (Event.current.type == EventType.Layout &&
+                Time.realtimeSinceStartup - relayListLastUpdate > 2f)
+            {
+                AHMapCircle.RefreshSortedRelays();
+                relayListLastUpdate = Time.realtimeSinceStartup;
+            }
+
+            Vessel commNetRelay = AHMapCircle.GetCommNetFirstHopRelay();
+
+            GUILayout.BeginVertical ();
+            scrollVectorRelayList = GUILayout.BeginScrollView (scrollVectorRelayList);
+
+            // show all relays
+            if (GUILayout.Button(/*All Relays*/Localizer.Format("#autoLOC_AH_0117"),
+                    AHMapCircle.selectedRelay == null ? AHUIStyling.ButtonSelected : AHUIStyling.ButtonDefault))
+            {
+                AHMapCircle.selectedRelay = null;
+            }
+
+            foreach (var item in AHMapCircle.SortedRelays)
+            {
+                string relayPower = AHUtil.ToKMG(item.antennas.RelayPower, false, 2);
+                string strButton = item.vessel.vesselName + " (" + relayPower + ")";
+                if (item.signal >= 0)
+                {
+                    strButton += " " + (item.signal * 100).ToString("N0") + "%";
+                }
+                if (item.vessel == commNetRelay)
+                {
+                    strButton += " [" + /*in use*/Localizer.Format("#autoLOC_AH_0119") + "]";
+                }
+
+                GUIStyle buttonStyle = AHMapCircle.selectedRelay == item.vessel
+                    ? AHUIStyling.ButtonSelected
+                    : AHUIStyling.ButtonDefault;
+
+                if (GUILayout.Button(strButton, buttonStyle))
+                {
+                    AHMapCircle.selectedRelay = item.vessel;
+                }
+            }
+            GUILayout.EndScrollView ();
+            GUILayout.EndVertical ();
+            GUI.DragWindow ();
+        }
+
         
     }
 }

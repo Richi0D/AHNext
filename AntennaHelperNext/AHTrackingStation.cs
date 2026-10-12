@@ -194,7 +194,22 @@ namespace AntennaHelperNext
 		        lockDragToParent: true,
 		        lockLower: false
 				)
-			}
+			},
+	        { AHTrackingStationWindows.RelayListWindowName, new WindowInfo(
+		        724519,
+		        new Rect (new Vector2 (
+				        AntennaHelperSettings.WindowPositions["tracking_station_main_window_position"].x-260,
+				        AntennaHelperSettings.WindowPositions["tracking_station_main_window_position"].y)
+			        , new Vector2 (260, 200)),
+		        AHTrackingStationWindows.RelayListWindow,
+		        Localizer.Format ("#autoLOC_AH_0118"),
+		        parentWindow: "TrackingMain",
+		        minHeight: 100,
+		        lockDragToParent: true,
+		        lockLower: false,
+		        lockBottom: true
+		        )
+	        }
         };
         
 		public void OnGUI ()

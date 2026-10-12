@@ -309,6 +309,21 @@ namespace AntennaHelperNext
 		        AHTrackingStationWindows.MainWindow,
 		        Localizer.Format ("#autoLOC_AH_0001"),
 		        saveKey:"flight_main_window_position")
+	        },
+	        { AHTrackingStationWindows.RelayListWindowName, new WindowInfo(
+		        724520,
+		        new Rect (new Vector2 (
+				        AntennaHelperSettings.WindowPositions["flight_main_window_position"].x-260,
+				        AntennaHelperSettings.WindowPositions["flight_main_window_position"].y)
+			        , new Vector2 (260, 200)),
+		        AHTrackingStationWindows.RelayListWindow,
+		        Localizer.Format ("#autoLOC_AH_0118"),
+		        parentWindow: "FlightMain",
+		        minHeight: 100,
+		        lockDragToParent: true,
+		        lockLower: false,
+		        lockBottom: true
+		        )
 	        }
         };
         

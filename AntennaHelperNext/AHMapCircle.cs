@@ -24,6 +24,7 @@ namespace AntennaHelperNext
         public static AHTargetType selectedShipType = AHTargetType.FLIGHT;
         public static double selectedSignalStrength = 0;
         public static AHAntennaType selectedAntennaType = AHAntennaType.ALL;
+        public static Vessel selectedRelay = null; // null shows all relays
         public static bool inMapView = false;
         
         // ParticleMeshes and Position Matrices for each entity
@@ -41,6 +42,7 @@ namespace AntennaHelperNext
             // init the single bubbles
             DirectConDSNBubble = (DefinedParticleMeshes.MediumCloud, Matrix4x4.identity);
             FirstHopBubble = (null, DefinedParticleMeshes.MediumCloud, Matrix4x4.identity);
+            selectedRelay = null; // vessels from the previous scene are not valid anymore
             InitRelayBubbles();
         }
         
@@ -68,8 +70,63 @@ namespace AntennaHelperNext
                 }
             }
             RelayBubbles = bubbles;
+
+            // selected relay could be destroyed, fall back to all relays
+            if (selectedRelay != null && !RelayBubbles.Exists(b => b.vessel == selectedRelay))
+            {
+                selectedRelay = null;
+            }
+            RefreshSortedRelays();
         }
-        
+
+
+        // Relays sorted by signal strength to the active vessel, signal is -1 if it can not be calculated.
+        // Without a flying active vessel (editor ship or nothing selected) sort by relay power only.
+        // Refreshed on relay list changes, vessel changes, range updates and when the selector opens.
+        public static List<(Vessel vessel, AHShipAntennas antennas, double signal)> SortedRelays =
+            new List<(Vessel vessel, AHShipAntennas antennas, double signal)>();
+
+        public static void RefreshSortedRelays()
+        {
+            var relays = new List<(Vessel vessel, AHShipAntennas antennas, double signal)>();
+            Vessel active = selectedShipType == AHTargetType.FLIGHT ? activeVessel.vessel : null;
+            double activePower = selectedAntennaType == AHAntennaType.ALL
+                ? ActiveShipAntennas.VesselPower
+                : ActiveShipAntennas.RelayPower;
+
+            foreach (var bubble in RelayBubbles)
+            {
+                if (!AHShipList.FlightShipList.TryGetValue(bubble.vessel, out AHShipAntennas shipAntennas)) continue;
+                double signal = -1;
+                if (active != null && bubble.vessel != active)
+                {
+                    double distance = Vector3d.Distance(active.GetWorldPos3D(), bubble.vessel.GetWorldPos3D());
+                    double maxRange = AHUtil.GetMaxRange(activePower, shipAntennas.RelayPower);
+                    signal = AHUtil.GetSignalStrength(AHUtil.GetNormalizedRange(distance, maxRange));
+                }
+                relays.Add((bubble.vessel, shipAntennas, signal));
+            }
+
+            relays.Sort((a, b) =>
+            {
+                int compare = b.signal.CompareTo(a.signal);
+                return compare != 0 ? compare : b.antennas.RelayPower.CompareTo(a.antennas.RelayPower);
+            });
+            SortedRelays = relays;
+        }
+
+
+        // relay vessel which CommNet actually uses as first hop for the active vessel, null if none
+        public static Vessel GetCommNetFirstHopRelay()
+        {
+            if (selectedShipType != AHTargetType.FLIGHT ||
+                activeVessel.vessel == null ||
+                directconnectedToHome ||
+                !AHCommNet.IsConnected(activeVessel.vessel))
+                return null;
+            return FirstHopBubble.vessel;
+        }
+
         
         // Get current commnet path and set bubbles
         public static void GetCommNetPathBubbles()
@@ -86,10 +143,15 @@ namespace AntennaHelperNext
                 else
                 {
                     // get first ship on path, no vessels on path if not connected!
-                    if (activeVessel.vessel.connection.IsConnected)
+                    if (AHCommNet.IsConnected(activeVessel.vessel) && activeCommPathVessels.Count > 0)
                     {
                         Vessel commnetVessel = activeCommPathVessels[0];
                         FirstHopBubble = (commnetVessel, DefinedParticleMeshes.MediumCloud, Matrix4x4.identity);
+                    }
+                    else
+                    {
+                        // not connected or first hop not in our relay list
+                        FirstHopBubble = (null, DefinedParticleMeshes.MediumCloud, Matrix4x4.identity);
                     }
                 }
             }
@@ -133,9 +195,10 @@ namespace AntennaHelperNext
                 }
                 else
                 {
-                    if (activeVessel.vessel.connection.IsConnected)
+                    if (AHCommNet.IsConnected(activeVessel.vessel) &&
+                        FirstHopBubble.vessel != null &&
+                        AHShipList.FlightShipList.TryGetValue(FirstHopBubble.vessel, out AHShipAntennas firstHopShipAntennas))
                     {
-                        AHShipAntennas firstHopShipAntennas = AHShipList.FlightShipList[FirstHopBubble.vessel];
                         // this is first hop. so we can use all antennas or only relay antennas from active ship
                         if (selectedAntennaType == AHAntennaType.ALL)
                         {
@@ -169,6 +232,9 @@ namespace AntennaHelperNext
                 Matrix4x4 newMatrix = UpdateMatrix(bubble.matrix, newRadius: radiusBubble);
                 RelayBubbles[i] = (bubble.vessel, bubble.mesh, newMatrix);
             }
+
+            // active vessel or antenna type could be changed
+            RefreshSortedRelays();
         }
         
         
@@ -230,7 +296,8 @@ namespace AntennaHelperNext
             if (displayType == AHDisplayType.ACTIVE &&
                 selectedShipType == AHTargetType.FLIGHT &&
                 activeVessel.vessel != null && 
-                activeVessel.vessel.connection.IsConnected)
+                AHCommNet.IsConnected(activeVessel.vessel) &&
+                (directconnectedToHome || FirstHopBubble.vessel != null))
             {
                 FirstHopBubble.mesh.Render(ToScaledSpace(FirstHopBubble.matrix));
             }
@@ -241,6 +308,7 @@ namespace AntennaHelperNext
             {
                 foreach (var bubble in RelayBubbles)
                 {
+                    if (selectedRelay != null && bubble.vessel != selectedRelay) continue;
                     bubble.mesh.Render(ToScaledSpace(bubble.matrix));
                 }               
             }

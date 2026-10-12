@@ -19,6 +19,7 @@ namespace AntennaHelperNext
         public float MinHeight;
         public bool LockDragToParent;
         public bool LockLower;
+        public bool LockBottom;
 
         public WindowInfo(
             int id,
@@ -29,7 +30,8 @@ namespace AntennaHelperNext
             string saveKey = null,
             float minHeight = 40,
             bool lockDragToParent = false,
-            bool lockLower = true
+            bool lockLower = true,
+            bool lockBottom = false
             )
         {
             ID = id;
@@ -42,6 +44,7 @@ namespace AntennaHelperNext
             IsVisible = false;
             LockDragToParent = lockDragToParent;
             LockLower = lockLower;
+            LockBottom = lockBottom;
         }
         
         public static void ShowWindow(string name, Dictionary<string, WindowInfo> winDictonary) =>
@@ -91,6 +94,25 @@ namespace AntennaHelperNext
             }
         }
 
+        // stick window to the lower left of the parent, bottom edges aligned.
+        // the height fills the space below windows sticking to the upper left of the same parent
+        private static void AlignBottomLeft(WindowInfo win, WindowInfo parentWin, Dictionary<string, WindowInfo> winDictonary)
+        {
+            float top = parentWin.Position.y;
+            foreach (var sibling in winDictonary.Values)
+            {
+                if (sibling != win && sibling.IsVisible &&
+                    sibling.ParentWindow == win.ParentWindow &&
+                    sibling.LockDragToParent && !sibling.LockLower && !sibling.LockBottom)
+                {
+                    top = Mathf.Max(top, sibling.Position.yMax);
+                }
+            }
+            win.Position.height = Mathf.Max(win.MinHeight, parentWin.Position.yMax - top);
+            float xPos = ExtendWindowPos(parentWin.Position, win.Position, false).x;
+            win.Position.position = new Vector2(xPos, parentWin.Position.yMax - win.Position.height);
+        }
+
         private static float lastMinWindowHeightFlight = 150;
         public static void onGuiWindow(Dictionary<string, WindowInfo> winDictonary)
         {
@@ -112,7 +134,14 @@ namespace AntennaHelperNext
                     winDictonary.TryGetValue(win.ParentWindow, out var parentWin) && 
                     win.LockDragToParent)
                 {
-                    win.Position.position = ExtendWindowPos(parentWin.Position, win.Position, win.LockLower);
+                    if (win.LockBottom)
+                    {
+                        AlignBottomLeft(win, parentWin, winDictonary);
+                    }
+                    else
+                    {
+                        win.Position.position = ExtendWindowPos(parentWin.Position, win.Position, win.LockLower);
+                    }
                 }
 
                 if (kv.Key == "FlightMain" && !AHMapCircle.inMapView

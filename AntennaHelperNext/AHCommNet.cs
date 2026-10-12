@@ -6,7 +6,12 @@ namespace AntennaHelperNext
 {
     public static class AHCommNet
     {
-        
+        // vessels without CommNet (e.g. asteroids) have no connection
+        public static bool IsConnected(Vessel vessel)
+        {
+            return vessel != null && vessel.connection != null && vessel.connection.IsConnected;
+        }
+
         public static List<Vessel> GetCommPathVessels(Vessel vessel, bool isEditorVessel=false)
         {
             List<Vessel> vesselsOnPath = new List<Vessel>();
@@ -17,7 +22,12 @@ namespace AntennaHelperNext
             }
             AHMapCircle.connectedToHome = false; // reset
             AHMapCircle.directconnectedToHome = false; // reset
-			
+            if (vessel.connection == null)
+            {
+                // vessel is not part of CommNet
+                return vesselsOnPath;
+            }
+
             // a CommPath has multiple links each link is a CommLink, A is source, B is destination
             CommPath commpath = vessel.connection.ControlPath;
             foreach (CommLink link in commpath)
